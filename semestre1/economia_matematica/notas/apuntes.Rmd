@@ -5,7 +5,9 @@ author: "José Burgos"
 date: "2024-08-28"
 output: 
    beamer_presentation:
-     theme: madrid
+     number_section: false
+theme: Madrid
+color: whale
 ---
 
 ```{r setup, include=FALSE}
@@ -13,6 +15,8 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
 ## Naturaleza de la economía matemática
+
+La economía matemática no es una rama de la economía.
 
 ### Economía matemática
 

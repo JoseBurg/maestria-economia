@@ -1,0 +1,72 @@
+---
+title: "Economía Matemática"
+subtitle: "Práctica 1: elementos básicos"
+author: "José Burgos"
+date: "2024-09-22"
+output: pdf_document
+fontsize: 16pt
+geometry: margin=1in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library()
+```
+
+# Modelos económicos
+
+---------------------------------------------------------------------------------------------------
+
+Cualquier teoría económica es necesariamente una abstracción del mundo real. Entre otras cosas, porque la inmensa complejidad de la economía real imposibilita comprender a la vez todas las interrelaciones; y tampoco, para el caso, todas estas interrelaciones son de igual importancia para la comprensión del fenómeno económico particular de estudio.
+
+## Elementos de un modelo matemático
+
+### Variables, constantes y parámetros
+
+Una **variable** es algo cuya magnitud puede cambiar, es decir, algo que puede tomar valores diferentes. Puesto que cada variable puede tomar varios valores, se debe representar mediante un símbolo en vez de un número especifico. Ejemplo: precio ($P$), costo ($C$), ingreso ($I$), etc...
+
+Un modelo económico, construido de manera apropiada, se puede resolver para obtener los *valores solución* de cierto conjunto de variables, como por ejemplo el nivel de precios de depuración del mercado del mercado o el nivel de producción maximización-ganancias. Las variables cuyos valores solución se buscan desde el modelo, se conocen como *variables **endógenas*** (que se originan desde dentro del modelo). No obstante, el modelo también podría contener variables que se supone que están determinadas por fuerzas externas del modelo y cuyas magnitudes se aceptan sólo como datos; este tipo de variables se llaman *variables **exógenas*** (que se originan desde fuera).
+
+Un *parámetro* es una variable que se mantiene constante dentro de un modelo o ecuación, aunque puede variar entre diferentes modelos o situaciones. A diferencia de una variable, que puede cambiar dentro del análisis, un parámetro define las condiciones del sistema.
+
+Una *constante* es un valor fijo que no cambia ni dentro ni fuera del modelo o ecuación. A diferencia de un parámetro, que puede ser modificado entre diferentes escenarios para analizar su impacto, una constante permanece igual en todas las condiciones del análisis.
+
+### Ecuaciones e identidades
+
+En las aplicaciones económicas se podría distinguir entre tres tipos de ecuación: ecuaciones definicionales, de comportamiento y condicionales.
+
+Una *ecuación definicional* establece una identidad entre dos expresiones alternas que tienen el mismo significado. Para tal ecuación, suele usarse el signo de igualdad idéntica $\equiv$ (léase: "es idénticamente igual a") en liga del signo de igual $=$, aunque este último también es aceptable. Como ejemplo, la ganancia total se define como el exceso de ingreso total sobre el costo total; así, se puede escribir:
+
+$$\pi \equiv R -C$$
+
+*Ecuación de comportamiento*, especifica la manera en la cual se comporta una variable en respuesta a cambios en otras variables. En términos generales, las ecuaciones de comportamiento se pueden usar para describir el entorno institucional general de un modelo, incluso aspectos tecnológico (por ejemplo, función de producción) y legales (como estructura fiscal). Sin embargo, antes de escribir una ecuación de comportamiento, siempre es necesario adoptar suposiciones definidas respecto al patrón de conducta de la variable en cuestión. Considere dos funciones de costo
+
+$$
+C=75+10Q \tag{1}
+$$
+
+$$
+C=110+Q^2 \tag{2}
+$$
+
+donde $Q$ denota la producción. Puesto que las dos ecuaciones tienen formas diferentes, resulta evidente que la condición de producción supuesta en cada una es diferente de la otra. En (2.1), el costo fijo (el valor de $C$ cuando $Q=0$ es 75, mientras que en (2) es 110). La variación de costo también es diferente. En (2), para cada incremento unitario en $Q$, hay un incremento constante de 10 en $C$. Pero en (2), cuando $Q$ aumenta unidad tras unidad, $C$ aumentará mediante cantidades progresivamente más grandes.
+
+En las *ecuaciones condicionales* expresa que se debe satisfacer un requerimiento. Por ejemplo, en un modelo en el que interviene el concepto equilibrio, se debe establecer una *condición de equilibrio*, que describe el prerrequisito para la consecución de equilibrio. Dos de las condiciones de equilibrio más conocidas en economía son
+
+$$
+Q_d = Q_s \tag{cantidad demandada = cantidad suministrada}
+$$
+
+y
+
+$$
+S = I \tag{ahorro previsto = inversión prevista}
+$$
+
+que pertenecen, respectivamente, al equilibrio de un modelo de mercado y al equilibrio del modelo de ingreso nacional en su forma más simple. De modo similar, un modelo de optimización deriva o aplica una o más condiciones *de optimización* Una condición de este tipo que viene fácilmente a la mes es
+
+$$
+CM=IM \tag{[costo marginal = ingreso marginal]}
+$$
+
+en la teoría de la empresas. Debido a que las ecuaciones de este tipo no son definicionales ni de comportamiento, por sí mismas constituyen una clase.
