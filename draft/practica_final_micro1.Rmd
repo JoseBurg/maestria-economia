@@ -1,0 +1,61 @@
+---
+title: "Solución de Ejercicios (14.1 y 14.2)"
+author: "José Burgos"
+date: "`r format(Sys.Date(), '%d de %B del %Y')`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+```
+
+Ejercicio 14.2 Sea la demanda
+
+𝑄    =    53 − 𝑃 ⟹ 𝑃    =    53 − 𝑄 , Q=53−P⟹P=53−Q, y el costo medio (y marginal) 𝐶 𝑀 𝑒 = 𝐶 𝑀 𝑔 = 5 CMe=CMg=5.
+
+(a) Monopolio El ingreso total es
+
+𝐼 𝑇 ( 𝑄 )    =    𝑄 × ( 53 − 𝑄 )    =    53   𝑄    −    𝑄 2 . IT(Q)=Q×(53−Q)=53Q−Q 2 . Por tanto,
+
+𝐼 𝑀 𝑔    =    𝑑 𝑑 𝑄 ( 53   𝑄 − 𝑄 2 )    =    53 − 2   𝑄 . IMg= dQ d ​ (53Q−Q 2 )=53−2Q. La condición 𝐼 𝑀 𝑔 = 𝐶 𝑀 𝑔 IMg=CMg da:
+
+53 − 2   𝑄    =    5 ⟹ 2   𝑄 = 48 ⟹ 𝑄 ∗ = 24 , 𝑃 ∗ = 53 − 24 = 29. 53−2Q=5⟹2Q=48⟹Q ∗ =24,P ∗ =53−24=29. La ganancia del monopolista:
+
+𝜋 ∗    =    ( 𝑃 ∗ − 5 )   𝑄 ∗    =    ( 29 − 5 ) × 24    =    24 × 24    =    576. π ∗ =(P ∗ −5)Q ∗ =(29−5)×24=24×24=576. (b) Duopolio de Cournot (dos empresas con 𝐶 𝑀 𝑔 = 5 CMg=5) Sean 𝑞 1 q 1 ​ y 𝑞 2 q 2 ​ . La demanda total:
+
+𝑞 1 + 𝑞 2 = 53 − 𝑃 ⟹ 𝑃 = 53 − ( 𝑞 1 + 𝑞 2 ) . q 1 ​ +q 2 ​ =53−P⟹P=53−(q 1 ​ +q 2 ​ ). El beneficio de la empresa 1:
+
+𝜋 1    =    𝑞 1   [ 𝑃 − 5]    =    𝑞 1   [ ( 53 − ( 𝑞 1 + 𝑞 2 ) ) − 5]    =    𝑞 1   [ 48 − ( 𝑞 1 + 𝑞 2 )] . π 1 ​ =q 1 ​ [P−5]=q 1 ​ [(53−(q 1 ​ +q 2 ​ ))−5]=q 1 ​ [48−(q 1 ​ +q 2 ​ )]. Maximizando respecto a 𝑞 1 q 1 ​ ,
+
+∂ 𝜋 1 ∂ 𝑞 1    =    48 − ( 𝑞 1 + 𝑞 2 ) − 𝑞 1    =    48 − 2   𝑞 1 − 𝑞 2    =    0 ⟹ 𝑞 1 ∗ ( 𝑞 2 )    =    48 − 𝑞 2 2 . ∂q 1 ​
+
+∂π 1 ​
+
+​=48−(q 1 ​ +q 2 ​ )−q 1 ​ =48−2q 1 ​ −q 2 ​ =0⟹q 1 ∗ ​ (q 2 ​ )= 2 48−q 2 ​
+
+​. Por simetría,
+
+𝑞 2 ∗ ( 𝑞 1 )    =    48 − 𝑞 1 2 . q 2 ∗ ​ (q 1 ​ )= 2 48−q 1 ​
+
+​. En equilibrio de Cournot, 𝑞 1 = 𝑞 2 = 𝑞 ∗ q 1 ​ =q 2 ​ =q ∗ . Sustituyendo en la primera:
+
+𝑞 ∗ = 48 − 𝑞 ∗ 2 ⟹ 2   𝑞 ∗ = 48 − 𝑞 ∗ ⟹ 3   𝑞 ∗ = 48 ⟹ 𝑞 ∗ = 16. q ∗ = 2 48−q ∗
+
+​⟹2q ∗ =48−q ∗ ⟹3q ∗ =48⟹q ∗ =16. Así, la producción total es 𝑄 = 32 Q=32, y el precio
+
+# 𝑃
+
+53 − 32 = 21. P=53−32=21. La ganancia de cada firma:
+
+𝜋 𝑖    =    ( 𝑃 − 5 )   𝑞 𝑖    =    ( 21 − 5 ) × 16    =    16 × 16    =    256 , π i ​ =(P−5)q i ​ =(21−5)×16=16×16=256, y la ganancia total de la industria es 512 512.
+
+(c) Observaciones finales Monopolio: produce menos ( 𝑄 = 24 Q=24) a un precio mayor ( 29
+
+<!-- -->
+
+29) y gana 𝜋 = 576 π=576.
+
+Duopolio (Cournot): produce más ( 𝑄 = 32 Q=32) a un precio menor ( 21 21), con ganancia total de 512 512 repartida en 256 256 para cada empresa.
+
+Competencia perfecta: si muchas firmas entran (con 𝐶 𝑀 𝑔 = 5 CMg=5), finalmente 𝑃 = 5 P=5 y las ganancias se reducen a 0 para cada firma.

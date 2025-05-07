@@ -1,0 +1,167 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Solución de Ejercicios (14.1 y 14.2)},
+  pdfauthor={José Burgos},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Solución de Ejercicios (14.1 y 14.2)}
+\author{José Burgos}
+\date{15 de April del 2025}
+
+\begin{document}
+\maketitle
+
+Ejercicio 14.2 Sea la demanda
+
+𝑄    =    53 − 𝑃 ⟹ 𝑃    =    53 − 𝑄 , Q=53−P⟹P=53−Q, y el costo medio (y
+marginal) 𝐶 𝑀 𝑒 = 𝐶 𝑀 𝑔 = 5 CMe=CMg=5.
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\tightlist
+\item
+  Monopolio El ingreso total es
+\end{enumerate}
+
+𝐼 𝑇 ( 𝑄 )    =    𝑄 × ( 53 − 𝑄 )    =    53   𝑄    −    𝑄 2 .
+IT(Q)=Q×(53−Q)=53Q−Q 2 . Por tanto,
+
+𝐼 𝑀 𝑔    =    𝑑 𝑑 𝑄 ( 53   𝑄 − 𝑄 2 )    =    53 − 2   𝑄 . IMg= dQ d
+\hspace{0pt} (53Q−Q 2 )=53−2Q. La condición 𝐼 𝑀 𝑔 = 𝐶 𝑀 𝑔 IMg=CMg da:
+
+53 − 2   𝑄    =    5 ⟹ 2   𝑄 = 48 ⟹ 𝑄 ∗ = 24 , 𝑃 ∗ = 53 − 24 = 29.
+53−2Q=5⟹2Q=48⟹Q ∗ =24,P ∗ =53−24=29. La ganancia del monopolista:
+
+𝜋 ∗    =    ( 𝑃 ∗ − 5 )   𝑄 ∗    =    ( 29 − 5 ) × 24    =    24 × 24   
+=    576. π ∗ =(P ∗ −5)Q ∗ =(29−5)×24=24×24=576. (b) Duopolio de Cournot
+(dos empresas con 𝐶 𝑀 𝑔 = 5 CMg=5) Sean 𝑞 1 q 1 \hspace{0pt} y 𝑞 2 q 2
+\hspace{0pt} . La demanda total:
+
+𝑞 1 + 𝑞 2 = 53 − 𝑃 ⟹ 𝑃 = 53 − ( 𝑞 1 + 𝑞 2 ) . q 1 \hspace{0pt} +q 2
+\hspace{0pt} =53−P⟹P=53−(q 1 \hspace{0pt} +q 2 \hspace{0pt} ). El
+beneficio de la empresa 1:
+
+𝜋 1    =    𝑞 1   {[} 𝑃 − 5{]}    =    𝑞 1   {[} ( 53 − ( 𝑞 1 + 𝑞 2 ) )
+− 5{]}    =    𝑞 1   {[} 48 − ( 𝑞 1 + 𝑞 2 ){]} . π 1 \hspace{0pt} =q 1
+\hspace{0pt} {[}P−5{]}=q 1 \hspace{0pt} {[}(53−(q 1 \hspace{0pt} +q 2
+\hspace{0pt} ))−5{]}=q 1 \hspace{0pt} {[}48−(q 1 \hspace{0pt} +q 2
+\hspace{0pt} ){]}. Maximizando respecto a 𝑞 1 q 1 \hspace{0pt} ,
+
+∂ 𝜋 1 ∂ 𝑞 1    =    48 − ( 𝑞 1 + 𝑞 2 ) − 𝑞 1    =    48 − 2   𝑞 1 − 𝑞 2
+   =    0 ⟹ 𝑞 1 ∗ ( 𝑞 2 )    =    48 − 𝑞 2 2 . ∂q 1 \hspace{0pt}
+
+∂π 1 \hspace{0pt}
+
+\hspace{0pt}=48−(q 1 \hspace{0pt} +q 2 \hspace{0pt} )−q 1 \hspace{0pt}
+=48−2q 1 \hspace{0pt} −q 2 \hspace{0pt} =0⟹q 1 ∗ \hspace{0pt} (q 2
+\hspace{0pt} )= 2 48−q 2 \hspace{0pt}
+
+\hspace{0pt}. Por simetría,
+
+𝑞 2 ∗ ( 𝑞 1 )    =    48 − 𝑞 1 2 . q 2 ∗ \hspace{0pt} (q 1 \hspace{0pt}
+)= 2 48−q 1 \hspace{0pt}
+
+\hspace{0pt}. En equilibrio de Cournot, 𝑞 1 = 𝑞 2 = 𝑞 ∗ q 1 \hspace{0pt}
+=q 2 \hspace{0pt} =q ∗ . Sustituyendo en la primera:
+
+𝑞 ∗ = 48 − 𝑞 ∗ 2 ⟹ 2   𝑞 ∗ = 48 − 𝑞 ∗ ⟹ 3   𝑞 ∗ = 48 ⟹ 𝑞 ∗ = 16. q ∗ = 2
+48−q ∗
+
+\hspace{0pt}⟹2q ∗ =48−q ∗ ⟹3q ∗ =48⟹q ∗ =16. Así, la producción total es
+𝑄 = 32 Q=32, y el precio
+
+\section{𝑃}\label{ux1d443}
+
+53 − 32 = 21. P=53−32=21. La ganancia de cada firma:
+
+𝜋 𝑖    =    ( 𝑃 − 5 )   𝑞 𝑖    =    ( 21 − 5 ) × 16    =    16 × 16    =
+   256 , π i \hspace{0pt} =(P−5)q i \hspace{0pt} =(21−5)×16=16×16=256, y
+la ganancia total de la industria es 512 512.
+
+\begin{enumerate}
+\def\labelenumi{(\alph{enumi})}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  Observaciones finales Monopolio: produce menos ( 𝑄 = 24 Q=24) a un
+  precio mayor ( 29
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi})}
+\setcounter{enumi}{28}
+\tightlist
+\item
+  y gana 𝜋 = 576 π=576.
+\end{enumerate}
+
+Duopolio (Cournot): produce más ( 𝑄 = 32 Q=32) a un precio menor ( 21
+21), con ganancia total de 512 512 repartida en 256 256 para cada
+empresa.
+
+Competencia perfecta: si muchas firmas entran (con 𝐶 𝑀 𝑔 = 5 CMg=5),
+finalmente 𝑃 = 5 P=5 y las ganancias se reducen a 0 para cada firma.
+
+\end{document}
