@@ -1,0 +1,39 @@
+---
+title: "Análisis Econométrico"
+author: "José Burgos"
+output: html_notebook
+---
+
+# La naturaleza de la econometría y los datos económicos
+
+La econometría se basa en el desarrollo de métodos estadísticos que se utilizan para estimar relaciones económicas, probar teorías económicas y evaluar e implementar políticas públicas y de negocios. La aplicación más común de la econometría es el pronóstico de variables macroeconómicas tan importantes como las tasa de interés, de inflación y el producto interno bruto.
+
+La econometría se ha ocupado en la recolección y análisis de datos económicos **no experimentales,** estos datos son principalmente sobre individuos, empresa o segmentos de la economía que no son obtenidos por medio de experimentos controlados.
+
+## Pasos en un análisis económico empírico
+
+1.  Formular la pregunta interés. Como:
+
+    *¿Cuanto aumenta la delincuencia si se invierte más dinero en la estructura policial?*
+
+2.  Se construye un **modelo económico** formal, representado en ecuaciones matemáticas que describen diversas relaciones entre [^1]. Por ejemplo:
+
+    $$
+    ingreso=f(educ, exper)
+    $$
+
+3.  Se transforma este *modelo económico* a un **modelo econométrico**, *especificando* *el modelo*:
+
+    $$
+    ingreso=\beta_0 \ + \ \beta_1educ\ + \ \beta_2exper\ + \ u
+    $$
+
+    $u$ *es el término de error comprendido por los factores que pudieran explicar el ingreso pero no se consideraron en el modelo. Es importante resaltar, que por más variables que se incluyan en el modelo, siempre será imposible eliminar* $u$.
+
+    Los parámetros ( $\beta0, ..., \beta_2$ ) son las constante del ***modelo econométrico,*** lo que describen dirección u fuerza de la relación.
+
+4.  Plantearse diversas ***hipótesis**, como por ejemplo que la educación no tiene un efecto (positivo o negativo) sobre el ingreso o* $\beta_1 = 0$.
+
+5.  
+
+[^1]: La selección de estas variables es determinada tanto por la teoría como por consideraciones acercad de los datos.
