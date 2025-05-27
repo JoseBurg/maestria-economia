@@ -1,0 +1,234 @@
+---
+title: |
+    Los pagos electrónicos en República Dominicana \
+    Un análisis exploratorio
+subtitle: "Práctica 1 - Seminario de Economía Aplicada 1"
+author: "José Ant. Burgos (25-0140)"
+date: 05-28-2025
+format: 
+   pdf:
+    fig-pos: "H"
+    mainfont: "Times New Roman"
+    toc: true
+    toc-title: "Contenido"
+    echo: false
+    warning: false
+    message: false
+editor: visual
+---
+
+```{r}
+#| message: false
+#| echo: false
+#| warning: false
+
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(janitor)
+library(skimr)
+library(GGally)
+library(corrplot)
+library(gt)
+library(dplyr)
+library(ggplot2)
+library(scales)
+```
+
+```{r datos}
+
+path <- file.path(
+  here::here(), 
+  "materias/Seminario de economía"
+)
+  
+datos <- read_excel(
+  file.path(
+    # path,
+     "data.xlsx"
+  ),
+  sheet = "data") |> 
+  clean_names() |> 
+  select(-c(tarjetas, cheques)) |> 
+  filter(year < 2025) |> 
+  mutate(across(
+    -year, 
+    \(x) ((x/lag(x)) - 1) * 100,
+    .names = "var_{.col}"
+  ))
+
+datos_longer <- datos |> 
+  select(year, starts_with("var")) |> 
+  tidyr::pivot_longer(
+    cols = -year, 
+    names_to = "variables",
+    values_to = "creciemiento"
+  ) |> 
+  mutate(
+    variables = stringr::str_remove(variables, "var_"),
+    variables = stringr::str_to_sentence(variables),
+    variables = stringr::str_replace_all(variables, "_", " ")
+  )
+
+```
+
+\newpage
+
+# Introducción
+
+# Datos y metodología
+
+Se tomo las transferencias electrónicas de república dominicana publicadas por el Banco Central del mismo país. Ademas del PIB nominal por el enfoque del gasto y la tasa pasiva interbancaria desde la misma fuente.
+
+Por el rol tan importante que juega las transferencias electrónicas para los hacedores de política monetaria, es de gran importancia analizar su evolución en las últimas décadas.
+
+\newpage
+
+# Resultados
+
+**Gráfico 1**
+
+```{r, fig.align='center'}
+
+datos %>% 
+  arrange(year) %>% 
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = instrumentos_de_pago / 1e6), 
+            colour = "#0072B2",
+            linewidth = 1) +
+  scale_y_continuous(labels = label_comma(accuracy = 1)) +
+  scale_x_continuous(
+    breaks = function(x) seq(floor(min(x)), ceiling(max(x)), by = 3)) +
+  labs(
+    title = "Volumen de transacciones electronicas",
+    subtitle = "República Dominicana",
+    x = "Año",
+    y = "Transacciones (millones)",
+    caption = "Fuente: BCRD") +
+  theme_light()
+```
+
+**Gráfico 2**
+
+```{r}
+datos_longer |>
+  filter(!variables %in% c("Tp interbancarios")) |> 
+  ggplot(aes(year, creciemiento, color = variables)) + 
+  geom_line() +
+  labs(
+    title = "Variación interanual"
+  )
+
+  
+
+```
+
+\newpage
+
+## Análisis descriptivos de las variables
+
+```{r}
+estat_covid <- datos %>% 
+  filter(year >= 2020) |> 
+  select(-year, -starts_with("var")) %>% 
+  summarise(across(
+    everything(),
+    list(
+      Media      = ~mean(.x, na.rm = TRUE),
+      Mediana    = ~median(.x, na.rm = TRUE),
+      `Desv. Est` = ~sd(.x, na.rm = TRUE),
+      Mínimo     = ~min(.x, na.rm = TRUE),
+      Máximo     = ~max(.x, na.rm = TRUE)
+    ),
+    .names = "{.fn}_{.col}"
+  )) %>% 
+  pivot_longer(
+    everything(),
+    names_to  = c("Estadístico", "Variable"),
+    names_sep = "_",
+    values_to = "Valor"
+  ) %>% 
+  pivot_wider(names_from = Variable, values_from = Valor)
+
+estat_antes_covid <- datos %>% 
+  filter(year < 2020) |> 
+  select(-year, -starts_with("var")) %>% 
+  summarise(across(
+    everything(),
+    list(
+      Media      = ~mean(.x, na.rm = TRUE),
+      Mediana    = ~median(.x, na.rm = TRUE),
+      `Desv. Est` = ~sd(.x, na.rm = TRUE),
+      Mínimo     = ~min(.x, na.rm = TRUE),
+      Máximo     = ~max(.x, na.rm = TRUE)
+    ),
+    .names = "{.fn}_{.col}"
+  )) %>% 
+  pivot_longer(
+    everything(),
+    names_to  = c("Estadístico", "Variable"),
+    names_sep = "_",
+    values_to = "Valor"
+  ) %>% 
+  pivot_wider(names_from = Variable, values_from = Valor)
+
+
+estat_antes_covid_table <- estat_antes_covid %>% 
+  gt(rowname_col = "Estadístico") %>%
+  fmt_number(columns = everything(), decimals = 1, use_seps = TRUE) %>% 
+  tab_header(
+    title = "Estadísticos descriptivos",
+    subtitle = "Antes-covid (2008-2019)"
+  )
+
+estat_covid_table <- estat_covid %>% 
+  gt(rowname_col = "Estadístico") %>%
+  fmt_number(columns = everything(), decimals = 1, use_seps = TRUE) %>% 
+  tab_header(
+    title = "Estadísticos descriptivos",
+    subtitle = "Post-covid (2020-2024)"
+  )
+```
+
+**Comportamiento antes del covid:**
+
+`r estat_antes_covid_table`
+
+**Comportamiento después del covid:**
+
+`r estat_covid_table`
+
+## Correlación
+
+```{r corplot, fig.width = 7, fig.height = 7, out.width = "85%"}
+# Ajustar márgenes antes de dibujar (b, l, t, r)
+par(mar = c(4, 4, 1, 1))
+
+datos |>
+  dplyr::select(-year, -starts_with("var")) |>
+  janitor::clean_names(case = "sentence") |>
+  psych::cor.plot(
+    scale = FALSE,
+    upper = FALSE,
+    cex   = 0.8      # texto un poco más pequeño
+  )
+```
+
+# Conclusión
+
+\newpage
+
+# Reflexión sobre Escritura Económica
+
+# Anexos
+
+### Matrix de Correlación
+
+```{r}
+matrix_corr <- datos |> 
+  select(-c(year, starts_with("var"))) |> 
+  cor(use = "complete.obs")
+  
+matrix_corr |> 
+  round(3)
+```

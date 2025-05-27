@@ -15,7 +15,7 @@ library(corrplot)
 # ---------------------
 # 2. Cargar y preparar los datos
 # ---------------------
-data <- read_excel("data.xlsx", sheet = "vars") %>%
+data <- read_excel("data.xlsx", sheet = "data") %>%
   clean_names() |> 
   filter(year < 2025)
 
@@ -34,9 +34,8 @@ colSums(is.na(data))
 # 5. Estadísticas descriptivas personalizadas
 # ---------------------
 summary_stats <- data %>%
-  select(x1, x2, x3, x4) %>%
   summarise(
-    across(everything(), list(
+    across(-year, list(
       media    = \(x) mean(x, na.rm = TRUE),
       mediana  = \(x) median(x, na.rm = TRUE),
       desv_std = \(x) sd(x, na.rm = TRUE),
@@ -45,15 +44,6 @@ summary_stats <- data %>%
     ))
   )
 
-# summary_stats |> 
-#   tidyr::pivot_longer(
-#     cols = dplyr::everything(),
-#     names_to = "medida", 
-#     values_to = "value"
-#   ) |> 
-#   mutate(
-#     medida
-#   )
 
 print(summary_stats)
 

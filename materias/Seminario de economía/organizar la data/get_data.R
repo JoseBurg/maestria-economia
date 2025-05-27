@@ -9,8 +9,10 @@ tasas_pasivas |>
   clipr::write_clip()
 
 
-pib_nominal <- databcrd::get_pib_gasto() |> 
-  filter(partida == "Producto Interno Bruto")
+pib_nominal <- databcrd::get_pib_sectores(
+  modalidad = "nominal", 
+  acumulado = TRUE) |> 
+  filter(sector == "Producto Interno Bruto")
 
 pib_nominal |> 
   filter(
@@ -18,3 +20,5 @@ pib_nominal |>
     year >= 2008) |> 
   select(year, pib_nominal) |> 
   clipr::write_clip()
+
+
