@@ -5,8 +5,7 @@ subtitle: "Práctica 1 - Seminario de Economía Aplicada 1"
 author: "José Ant. Burgos (25-0140)"
 date: 05-28-2025
 format: 
-   pdf:
-    fig-pos: "H"
+   docx:
     mainfont: "Times New Roman"
     toc: true
     toc-title: "Contenido"
@@ -43,7 +42,7 @@ path <- file.path(
   
 datos <- read_excel(
   file.path(
-    # path,
+    path,
      "data.xlsx"
   ),
   sheet = "data") |> 
@@ -77,7 +76,6 @@ datos_longer <- datos |>
 
 El presente informe examina la evolución de las transferencias electrónicas en República Dominicana durante el período 2008-2024, revelando transformaciones significativas en el sistema de pagos tras la pandemia de COVID-19. Los resultados muestran un crecimiento exponencial en el volumen de transacciones electrónicas, con aumentos promedio del 141% en instrumentos de pago y 290% en transferencias electrónicas durante el período post-COVID comparado con la era pre-pandémica.
 
-
 # Introducción
 
 Este ejercicio tiene como objetivo analizar la evolución del sistema de pagos electrónicos en República Dominicana, centrándose en las transformaciones estructurales observadas durante el período 2008-2024. Las variables seleccionadas para el análisis incluyen el volumen de transacciones con instrumentos de pago electrónicos, las transferencias electrónicas, la tasa pasiva interbancaria y el PIB nominal.
@@ -94,66 +92,11 @@ Las variables analizadas incluyen el volumen de transacciones con instrumentos d
 
 La metodología incluyó la segmentación del período en dos sub-muestras: pre-COVID (2008-2019) y post-COVID (2020-2024), permitiendo identificar cambios en los patrones estadísticos y evaluar el impacto de la pandemia en el comportamiento de las variables financieras.
 
-\newpage
-
 # Resultados
-
-Los estadísticos descriptivos revelan transformaciones dramáticas en el sistema de pagos dominicano. Durante el período pre-COVID, los instrumentos de pago electrónicos registraron un promedio de 306.9 millones de transacciones anuales, mientras que en el período post-COVID esta cifra se elevó a 741.6 millones, representando un incremento del 141 %. De manera más pronunciada, las transferencias electrónicas aumentaron de un promedio de 53.1 millones en el período pre-COVID a 206.9 millones en el post-COVID, equivalente a un crecimiento del 290 %.
-
-
-La variabilidad de los datos también experimentó cambios sustanciales. La desviación estándar de los instrumentos de pago se duplicó en el período post-COVID, pasando de 112.7 millones a 222.9 millones, sugiriendo una mayor volatilidad en la adopción de tecnologías de pago. Similar patrón se observa en las transferencias electrónicas, cuya desviación estándar aumentó de 23.2 millones a 82.3 millones.
-
-El análisis de correlación revela fuertes asociaciones entre las variables del sistema de pagos y la actividad económica. Los instrumentos de pago electrónicos muestran una correlación de 0.98 con el PIB nominal, mientras que las transferencias electrónicas presentan una correlación de 0.95 con la misma variable. Particularmente notable es la alta correlación (0.986) entre instrumentos de pago y transferencias electrónicas, indicando que ambas modalidades evolucionan de manera sincronizada.
-
-La tasa pasiva interbancaria muestra correlaciones más débiles con las demás variables, registrando coeficientes de 0.203 con instrumentos de pago y 0.280 con transferencias electrónicas. Este patrón sugiere que las decisiones de adopción de pagos electrónicos están más influenciadas por factores estructurales y tecnológicos que por las condiciones monetarias de corto plazo.
-
-Los gráficos temporales evidencian un punto de inflexión claro alrededor de 2020, momento en que tanto los instrumentos de pago como las transferencias electrónicas experimentaron aceleraciones significativas en sus tasas de crecimiento. El volumen de transacciones electrónicas mostró un crecimiento exponencial particularmente pronunciado durante 2020-2022, consolidándose posteriormente en niveles sustancialmente superiores a los observados en la década anterior.
-
-
-
-
-**Gráfico 1**
-
-```{r, fig.align='center'}
-
-datos %>% 
-  arrange(year) %>% 
-  ggplot(aes(x = year)) +
-  geom_line(aes(y = instrumentos_de_pago / 1e6), 
-            colour = "#0072B2",
-            linewidth = 1) +
-  scale_y_continuous(labels = label_comma(accuracy = 1)) +
-  scale_x_continuous(
-    breaks = function(x) seq(floor(min(x)), ceiling(max(x)), by = 3)) +
-  labs(
-    title = "Volumen de transacciones electronicas",
-    subtitle = "República Dominicana",
-    x = "Año",
-    y = "Transacciones (millones)",
-    caption = "Fuente: BCRD") +
-  theme_light()
-```
-
-**Gráfico 2**
-
-```{r}
-datos_longer |>
-  filter(!variables %in% c("Tp interbancarios")) |> 
-  ggplot(aes(year, creciemiento, color = variables)) + 
-  geom_line() +
-  labs(
-    title = "Variación interanual"
-  )
-
-  
-
-```
-
-\newpage
 
 ## Análisis descriptivos de las variables
 
-```{r}
+```{r, fig.pos='H'}
 estat_covid <- datos %>% 
   filter(year >= 2020) |> 
   select(-year, -starts_with("var")) %>% 
@@ -216,15 +159,22 @@ estat_covid_table <- estat_covid %>%
   )
 ```
 
-**Comportamiento antes del covid:**
+Los estadísticos descriptivos revelan transformaciones dramáticas en el sistema de pagos dominicano. Durante el período pre-COVID, los instrumentos de pago electrónicos registraron un promedio de 306.9 millones de transacciones anuales, mientras que en el período post-COVID esta cifra se elevó a 741.6 millones, representando un incremento del 141 %. De manera más pronunciada, las transferencias electrónicas aumentaron de un promedio de 53.1 millones en el período pre-COVID a 206.9 millones en el post-COVID, equivalente a un crecimiento del 290 %.
 
-`r estat_antes_covid_table`
+### Comportamiento antes del covid:
 
-**Comportamiento después del covid:**
+```{r, fig.pos='H'}
+estat_antes_covid_table
+
+```
+
+### Comportamiento después del covid:
 
 `r estat_covid_table`
 
-## Correlación
+La variabilidad de los datos también experimentó cambios sustanciales. La desviación estándar de los instrumentos de pago se duplicó en el período post-COVID, pasando de 112.7 millones a 222.9 millones, sugiriendo una mayor volatilidad en la adopción de tecnologías de pago. Similar patrón se observa en las transferencias electrónicas, cuya desviación estándar aumentó de 23.2 millones a 82.3 millones.
+
+### Correlación
 
 ```{r corplot, fig.width = 7, fig.height = 7, out.width = "85%"}
 # Ajustar márgenes antes de dibujar (b, l, t, r)
@@ -240,6 +190,61 @@ datos |>
   )
 ```
 
+El análisis de correlación revela fuertes asociaciones entre las variables del sistema de pagos y la actividad económica. Los instrumentos de pago electrónicos muestran una correlación de 0.98 con el PIB nominal, mientras que las transferencias electrónicas presentan una correlación de 0.95 con la misma variable. Particularmente notable es la alta correlación (0.986) entre instrumentos de pago y transferencias electrónicas, indicando que ambas modalidades evolucionan de manera sincronizada.
+
+La tasa pasiva interbancaria muestra correlaciones más débiles con las demás variables, registrando coeficientes de 0.203 con instrumentos de pago y 0.280 con transferencias electrónicas. Este patrón sugiere que las decisiones de adopción de pagos electrónicos están más influenciadas por factores estructurales y tecnológicos que por las condiciones monetarias de corto plazo.
+
+**Gráfico 1**
+
+```{r, fig.align='center'}
+
+datos %>% 
+  arrange(year) %>% 
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = instrumentos_de_pago / 1e6), 
+            colour = "#0072B2",
+            linewidth = 1) +
+  scale_y_continuous(labels = label_comma(accuracy = 1)) +
+  scale_x_continuous(
+    breaks = function(x) seq(floor(min(x)), ceiling(max(x)), by = 3)) +
+  labs(
+    title = "Volumen de transacciones electronicas",
+    subtitle = "República Dominicana",
+    x = "Año",
+    y = "Transacciones (millones)",
+    caption = "Fuente: BCRD") +
+  theme_light()
+```
+
+Los gráficos temporales evidencian un punto de inflexión claro alrededor de 2020, momento en que tanto los instrumentos de pago como las transferencias electrónicas experimentaron aceleraciones significativas en sus tasas de crecimiento. El volumen de transacciones electrónicas mostró un crecimiento exponencial particularmente pronunciado durante 2020-2022, consolidándose posteriormente en niveles sustancialmente superiores a los observados en la década anterior.
+
+**Gráfico 2**
+
+```{r}
+datos_longer |>
+  filter(!variables %in% c("Tp interbancarios")) |> 
+  ggplot(aes(year, creciemiento, color = variables)) + 
+  geom_line() +
+  labs(
+    title = "Variación interanual",
+    y = "Crecimiento",
+    x = "Año",
+    color = NULL) +
+  theme_light() + 
+  scale_y_continuous(labels = ~scales::comma(.x, suffix = "%")) +
+  theme(
+    legend.position = "top"
+  ) + 
+  scale_color_manual(
+    values = c("#001219", "#005f73", "#495057")
+  )
+
+  
+
+```
+
+\newpage
+
 # Conclusión
 
 Los hallazgos más relevantes del análisis confirman la hipótesis de un cambio estructural en el sistema de pagos dominicano, catalizado por la pandemia de COVID-19. El crecimiento del 141% en instrumentos de pago y del 290% en transferencias electrónicas entre los períodos pre y post-COVID refleja una aceleración sin precedentes en la digitalización financiera del país.
@@ -247,10 +252,6 @@ Los hallazgos más relevantes del análisis confirman la hipótesis de un cambio
 La alta correlación entre las variables de pagos electrónicos y el PIB nominal (superiores a 0.94) sugiere que la adopción tecnológica en el sector financiero actúa como un motor complementario del crecimiento económico. La sincronización observada entre diferentes modalidades de pago electrónico indica la existencia de efectos de red y complementariedades tecnológicas que refuerzan mutuamente la adopción digital.
 
 Una pregunta de investigación futura relevante sería: ¿En qué medida la aceleración de los pagos electrónicos ha contribuido a mejorar la inclusión financiera y reducir la economía informal en República Dominicana? Esta línea de indagación podría complementarse con el análisis de variables socioeconómicas desagregadas por regiones y estratos poblacionales para evaluar el impacto distributivo de la digitalización financiera.
-
-
-
-\newpage
 
 # Reflexión sobre Escritura Económica
 
