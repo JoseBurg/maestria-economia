@@ -1,0 +1,104 @@
+---
+title: Análisis Econométrico
+subtitle: "Práctica 1: Econometría"
+author: "José Burgos"
+format: 
+  pdf:
+    echo: false
+    warning: false
+    message: false
+editor: visual
+---
+
+**Ejercicio 1: Considere la base de datosBase *ENCFT 20161 – 20164.xlsx* que contiene información sobre el lado de la oferta del mercado de trabajo.**
+
+a)  Importe la información a R, creando las bases de datos correspondientes.
+
+b)  Adjunte el módulo de MIEMBROS y el de OCUPACIÓN, creando una variable `id` que concatene la información de la vivienda, el hogar y el miembro, de modo que en una misma base de datos queden las características de los individuos y las variables de mercado laboral.
+
+```{r}
+library(dplyr)
+library(ggplot2)
+encft <- readr::read_csv("datos/encft2016.csv") |> 
+  janitor::clean_names()
+```
+
+c)  Cree la variable `EDAD` y `MUJER`, donde esta última sea igual a 1 si el individuo es mujer y 0 en caso contrario.
+
+```{r}
+#| echo: true
+encft <- encft |> 
+  mutate(
+    #Cuestionario: mujer = 2 y hombre = 1 
+    mujer = ifelse(sexo == 2, 1, 0)
+  )
+```
+
+d)  Usando histogramas, grafique la distribución de la **edad** por **género**.
+
+```{r plot_genero_edad}
+encft |> 
+  mutate(
+    mujer = factor(mujer, levels = c(0, 1),
+                   labels = c("Hombre", "Mujer"))) |> 
+  ggplot(aes(x = edad, fill = mujer)) + 
+  geom_histogram(bins = 30, alpha = 0.8, position = "identity") +
+  scale_fill_manual(
+    name   = "Género",
+    values = c("Hombre" = "#1f78b4", "Mujer" = "#e31a1c"),
+    labels = c("Hombre", "Mujer")) +
+  facet_wrap(~ mujer) +
+  labs(
+    title    = "Distribución de edad por género",
+    x        = "Edad",
+    y        = "Frecuencia") +
+  theme_light() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank()
+  )
+```
+
+e)  Cree la variable salario por hora (`W`) utilizando la información de ingreso laboral en la ocupación principal. Tenga en cuenta que el ingreso reportado en la base de datos no está necesariamente en la misma escala para todos los individuos (p. ej., algunos reportan salario por hora, otros por mes, etc.).
+
+f)  Muestre en una tabla la distribución de edad por percentil de ingreso. *En particular, reporte los percentiles 5, 25, 50, 75 y 95.*
+
+<!-- -->
+
+2.  **Propiedades de muestra finita**\
+    Para el caso del modelo de regresión lineal, muestre las propiedades de muestreo finito del estimador de mínimos cuadrados.
+
+3.  **Modelo de regresión lineal**\
+    $$ y = \alpha + \beta x + \varepsilon$$
+
+<!-- -->
+
+a)  Muestre que las ecuaciones normales de mínimos cuadrados implican que $\sum_i e_i = 0$ y que $\sum_i x_i e_i = 0$.
+
+b)  Muestre que la solución para el término constante es:: $\hat{\alpha} = \bar y - b\bar x$.
+
+c)  Muestre que la solución para $b$ es $b = \frac{\sum_{i=1}^n (x_i - \bar x)(y_i - \bar y)} {\sum_{i=1} (x_i - \bar x)^2}$
+
+<!-- -->
+
+6.  Los datos en el archivo *KoopandTobias2004.xls* son una extracción de 15 observaciones de una muestra de 2,178 individuos de un conjunto de variables. Sea $X1$ igual a la constante, educación, experiencia y habilidad. Mientras que sea $X2$ igual a la eduación de la madre, la educación del padre, y el número de hermanos. Sea y el salario.
+
+<!-- -->
+
+```{r}
+koopand <- readxl::read_xls("datos/KoopandTobias2004.xls") |> 
+  janitor::clean_names()
+```
+
+a)  Compute los coeficientes de MCO en la regresión de y sobre X1. Reporte los coeficientes.
+
+```{r}
+#| echo: true
+modelo1 <- lm(wage ~ education + experience + ability, data = koopand)
+
+coef(modelo1)
+```
+
+b)  Compute los coeficientes de MCO en la regresión de y sobre X1 y X2. Reporte los coeficientes.
+
+c)  Regrese cada una de las tres variables en X2 sobre todas las variables en X1. Estas nuevas variables denótenlas como $X^∗_2$ ¿Cuáles son las medias muestrales de estas variables? Explique el resultado.
