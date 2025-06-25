@@ -65,11 +65,25 @@ f)  Muestre en una tabla la distribución de edad por percentil de ingreso. *En 
 
 <!-- -->
 
-2.  **Propiedades de muestra finita**\
-    Para el caso del modelo de regresión lineal, muestre las propiedades de muestreo finito del estimador de mínimos cuadrados.
+2.  Para el caso del modelo de regresión lineal, muestre las propiedades de muestra finita del estimador de mínimos cuadrados.
 
-3.  **Modelo de regresión lineal**\
-    $$ y = \alpha + \beta x + \varepsilon$$
+    **Propiedades de muestra finita:**
+
+    1.  **Insesgadez**: $$\hat{\beta}=(X'X)^{-1}X'y\ \rightarrow\ E[\hat\beta|X]=\beta$$ *por expectativas iteradas* $E[\hat\beta]=\beta$. Esto demuestra que, para cualquier muestra (de tamaño $n>_-$), el estimador de MCO está centrado en el valor verdadero del parámetro.
+
+    2.  **Varianza condicional**
+
+    $$Var(\hat\beta|X)=Var[(X'X)^{-1}X'\epsilon|X]=\sigma^2(X'X)$$ De aquí se obtienen las varianzas individuales y las covarainzas entre componentes de $\hat\beta$.
+
+    3.  **Insesgadez del estimados de** $\sigam^2$
+
+    El estiamdor habitual de la varianza del error es:
+
+    $$s^2 = \frac{e'e}{n-(k+1)},\ \ \ \ \ \ \ e = y-X\hat\beta$$ Bajo los supuestos clásicos se tiene $E[s^2|X]=\sigma^2$, es decir, $s^2$ es insesgado para $\sigma^2$ en muestras finitas.
+
+    4.  **Optimalidad (Teorema de Gauss-Markov)**
+
+3.  **Modelo de regresión lineal** $$ y = \alpha + \beta x + \varepsilon$$
 
 <!-- -->
 
@@ -90,13 +104,19 @@ koopand <- readxl::read_xls("datos/KoopandTobias2004.xls") |>
   janitor::clean_names()
 ```
 
+\newpage
+
 a)  Compute los coeficientes de MCO en la regresión de y sobre X1. Reporte los coeficientes.
+
+**Modelo:**
+
+$$wage = \beta_0 + \beta_1education+\beta_2experience+\beta_3ability+\epsilon$$
 
 ```{r}
 #| echo: true
 modelo1 <- lm(wage ~ education + experience + ability, data = koopand)
 
-coef(modelo1)
+gtsummary::tbl_regression(modelo1, intercept = TRUE)
 ```
 
 b)  Compute los coeficientes de MCO en la regresión de y sobre X1 y X2. Reporte los coeficientes.
