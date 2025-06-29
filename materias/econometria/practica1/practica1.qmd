@@ -4,6 +4,9 @@ subtitle: "Práctica 1: Econometría"
 author: "José Burgos"
 format: 
   pdf:
+    include-in-header: 
+      text: |
+        \usepackage{float}
     echo: false
     warning: false
     message: false
@@ -75,7 +78,7 @@ f)  Muestre en una tabla la distribución de edad por percentil de ingreso. *En 
 
     $$Var(\hat\beta|X)=Var[(X'X)^{-1}X'\epsilon|X]=\sigma^2(X'X)$$ De aquí se obtienen las varianzas individuales y las covarainzas entre componentes de $\hat\beta$.
 
-    3.  **Insesgadez del estimados de** $\sigam^2$
+    3.  **Insesgadez del estimados de** $\sigma^2$
 
     El estiamdor habitual de la varianza del error es:
 
@@ -88,6 +91,10 @@ f)  Muestre en una tabla la distribución de edad por percentil de ingreso. *En 
 <!-- -->
 
 a)  Muestre que las ecuaciones normales de mínimos cuadrados implican que $\sum_i e_i = 0$ y que $\sum_i x_i e_i = 0$.
+
+Demostracion: Para demostrar que las ecuaciones normales de mínimos cuadrados implican que $\sum_i e_i = 0$ y $\sum_i x_i e_i = 0$, partimos de la definición del error $e_i = y_i - \hat{y}_i$, donde $\hat{y}_i$ es la predicción del modelo.
+
+La ecuación de regresión lineal es:
 
 b)  Muestre que la solución para el término constante es:: $\hat{\alpha} = \bar y - b\bar x$.
 
@@ -103,8 +110,6 @@ c)  Muestre que la solución para $b$ es $b = \frac{\sum_{i=1}^n (x_i - \bar x)(
 koopand <- readxl::read_xls("datos/KoopandTobias2004.xls") |> 
   janitor::clean_names()
 ```
-
-\newpage
 
 a)  Compute los coeficientes de MCO en la regresión de y sobre X1. Reporte los coeficientes.
 
@@ -122,3 +127,27 @@ gtsummary::tbl_regression(modelo1, intercept = TRUE)
 b)  Compute los coeficientes de MCO en la regresión de y sobre X1 y X2. Reporte los coeficientes.
 
 c)  Regrese cada una de las tres variables en X2 sobre todas las variables en X1. Estas nuevas variables denótenlas como $X^∗_2$ ¿Cuáles son las medias muestrales de estas variables? Explique el resultado.
+
+<!-- -->
+
+7.  Suponga que usted tiene dos estimadores insesgados e independientes del mismo parámetro $\theta$, por ejemplo $\hat{\theta}_1$ y $\hat{\theta}_2$, con la varianzas diferentes $v_1$ y $v_2$. Qué combinacón lineal $\hat{\theta}=c_1\hat{\theta_1}+c_2\hat{\theta_2}$ es el estimador insesgado de varianza mínima?
+
+Respuesta:
+
+Para que $\hat{\theta}$ sea insesgado, se debe cumplir que $E[\hat{\theta}] = \theta$. Dado que ambos estimadores son insesgados, tenemos:
+
+$$E[\hat{\theta}] = c_1 E[\hat{\theta}_1] + c_2 E[\hat{\theta}_2] = c_1 \theta + c_2 \theta = (c_1 + c_2) \theta$$
+
+Para que $\hat{\theta}$ sea insesgado, necesitamos que $c_1 + c_2 = 1$.
+
+Para minimizar la varianza de $\hat{\theta}$, utilizamos la propiedad de que la varianza de una combinación lineal de variables aleatorias independientes es la suma de las varianzas individuales:
+
+$$Var(\hat{\theta}) = Var(c_1 \hat{\theta}_1 + c_2 \hat{\theta}_2) = c_1^2 Var(\hat{\theta}_1) + c_2^2 Var(\hat{\theta}_2) = c_1^2 v_1 + c_2^2 v_2$$
+
+Para minimizar esta varianza bajo la restricción $c_1 + c_2 = 1$, podemos usar el método de Lagrange. Definimos la función objetivo:
+
+$$L(c_1, c_2, \lambda) = c_1^2 v_1 + c_2^2 v_2 + \lambda (c_1 + c_2 - 1)$$ Luego, derivamos respecto a $c_1$, $c_2$ y $\lambda$ y igualamos a cero:
+
+$$\frac{\partial L}{\partial c_1} = 2c_1 v_1 + \lambda = 0$$ $$\frac{\partial L}{\partial c_2} = 2c_2 v_2 + \lambda = 0$$ $$\frac{\partial L}{\partial \lambda} = c_1 + c_2 - 1 = 0$$ Resolviendo este sistema de ecuaciones, obtenemos:
+
+$$c_1 = \frac{v_2}{v_1 + v_2}$$ $$c_2 = \frac{v_1}{v_1 + v_2}$$
