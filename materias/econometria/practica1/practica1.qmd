@@ -4,9 +4,6 @@ subtitle: "Práctica 1: Econometría"
 author: "José Burgos"
 format: 
   pdf:
-    include-in-header: 
-      text: |
-        \usepackage{float}
     echo: false
     warning: false
     message: false
@@ -29,7 +26,6 @@ encft <- readr::read_csv("datos/encft2016.csv") |>
 c)  Cree la variable `EDAD` y `MUJER`, donde esta última sea igual a 1 si el individuo es mujer y 0 en caso contrario.
 
 ```{r}
-#| echo: true
 encft <- encft |> 
   mutate(
     #Cuestionario: mujer = 2 y hombre = 1 
@@ -64,11 +60,57 @@ encft |>
 
 e)  Cree la variable salario por hora (`W`) utilizando la información de ingreso laboral en la ocupación principal. Tenga en cuenta que el ingreso reportado en la base de datos no está necesariamente en la misma escala para todos los individuos (p. ej., algunos reportan salario por hora, otros por mes, etc.).
 
+```{r}
+# Asumiendo que un empleado trabaja 40 horas a la semana y 52 semanas al año,
+# y que el ingreso puede ser diario, mensual o anual.
+encft <- encft |> 
+  mutate(
+    wage_hours = case_when(
+      ingreso_asalariado == 0 ~ NA_real_,
+      ingreso_asalariado < 1000 ~ ingreso_asalariado / 8, # Asumiendo salario diario
+      ingreso_asalariado >= 1000 & ingreso_asalariado < 100000 ~ ingreso_asalariado / (40*4), # Asumiendo salario mensual
+      TRUE ~ ingreso_asalariado / (40*52) # Asumiendo salario anual
+    )
+  )
+```
+
 f)  Muestre en una tabla la distribución de edad por percentil de ingreso. *En particular, reporte los percentiles 5, 25, 50, 75 y 95.*
+
+```{r}
+encft |> 
+  filter(!is.na(wage_hours) & !is.na(edad)) |>
+  mutate(
+    rango_edad = case_when(
+      edad < 25 ~ "Menos de 25",
+      edad >= 25 & edad < 35 ~ "25-34",
+      edad >= 35 & edad < 45 ~ "35-44",
+      edad >= 45 & edad < 55 ~ "45-54",
+      edad >= 55 & edad < 65 ~ "55-64",
+      TRUE ~ "65 o más"),
+    rango_edad = factor(rango_edad, 
+                        levels = c("Menos de 25", "25-34", "35-44", "45-54", "55-64", "65 o más")
+                        
+                        )) |> 
+  summarise(
+    percentil_5  = quantile(wage_hours, 0.05, na.rm = TRUE),
+    percentil_25 = quantile(wage_hours, 0.25, na.rm = TRUE),
+    percentil_50 = quantile(wage_hours, 0.50, na.rm = TRUE),
+    percentil_75 = quantile(wage_hours, 0.75, na.rm = TRUE),
+    percentil_95 = quantile(wage_hours, 0.95, na.rm = TRUE), 
+    .by = "rango_edad"
+  ) |> 
+  
+  knitr::kable(
+    caption = "Distribución de edad por percentil de ingreso",
+    col.names = c("Rango de Edad", "Percentil 5", "Percentil 25", "Percentil 50", "Percentil 75", "Percentil 95"),
+    format = "simple",
+    digits = 2
+  )
+```
 
 <!-- -->
 
-2.  Para el caso del modelo de regresión lineal, muestre las propiedades de muestra finita del estimador de mínimos cuadrados.
+2.  **Para el caso del modelo de regresión lineal, muestre las propiedades de muestra finita del estimador de mínimos cuadrados.**
 
     **Propiedades de muestra finita:**
 
@@ -92,7 +134,7 @@ f)  Muestre en una tabla la distribución de edad por percentil de ingreso. *En 
 
 a)  Muestre que las ecuaciones normales de mínimos cuadrados implican que $\sum_i e_i = 0$ y que $\sum_i x_i e_i = 0$.
 
-Demostracion: Para demostrar que las ecuaciones normales de mínimos cuadrados implican que $\sum_i e_i = 0$ y $\sum_i x_i e_i = 0$, partimos de la definición del error $e_i = y_i - \hat{y}_i$, donde $\hat{y}_i$ es la predicción del modelo.
+Demostración: Para demostrar que las ecuaciones normales de mínimos cuadrados implican que $\sum_i e_i = 0$ y $\sum_i x_i e_i = 0$, partimos de la definición del error $e_i = y_i - \hat{y}_i$, donde $\hat{y}_i$ es la predicción del modelo.
 
 La ecuación de regresión lineal es:
 
@@ -102,7 +144,7 @@ c)  Muestre que la solución para $b$ es $b = \frac{\sum_{i=1}^n (x_i - \bar x)(
 
 <!-- -->
 
-6.  Los datos en el archivo *KoopandTobias2004.xls* son una extracción de 15 observaciones de una muestra de 2,178 individuos de un conjunto de variables. Sea $X1$ igual a la constante, educación, experiencia y habilidad. Mientras que sea $X2$ igual a la eduación de la madre, la educación del padre, y el número de hermanos. Sea y el salario.
+6.  **Los datos en el archivo *KoopandTobias2004.xls* son una extracción de 15 observaciones de una muestra de 2,178 individuos de un conjunto de variables. Sea** $X1$ **igual a la constante, educación, experiencia y habilidad. Mientras que sea** $X2$ **igual a la educación de la madre, la educación del padre, y el número de hermanos. Sea** $y$ **el salario.**
 
 <!-- -->
 
@@ -111,43 +153,375 @@ koopand <- readxl::read_xls("datos/KoopandTobias2004.xls") |>
   janitor::clean_names()
 ```
 
-a)  Compute los coeficientes de MCO en la regresión de y sobre X1. Reporte los coeficientes.
+a)  Compute los coeficientes de MCO en la regresión de $y$ sobre X1. Reporte los coeficientes.
 
 **Modelo:**
 
 $$wage = \beta_0 + \beta_1education+\beta_2experience+\beta_3ability+\epsilon$$
 
 ```{r}
-#| echo: true
 modelo1 <- lm(wage ~ education + experience + ability, data = koopand)
 
-gtsummary::tbl_regression(modelo1, intercept = TRUE)
+summary(modelo1)$coefficients |> 
+  knitr::kable(
+    caption = "Coeficientes de MCO en la regresión de $y$ sobre $X_1$",
+    col.names = c("Variable", "Estimación", "Error estándar", "Valor t", "Valor p"),
+    digits = 3
+  )
 ```
 
-b)  Compute los coeficientes de MCO en la regresión de y sobre X1 y X2. Reporte los coeficientes.
+b)  Compute los coeficientes de MCO en la regresión de $y$ sobre X1 y X2. Reporte los coeficientes.
+
+$$wage = \beta_0 + \beta_1education+\beta_2experience+\beta_3ability+ \beta_4education01 + \beta_5education02 + \beta_5siblings +  \epsilon$$
+
+```{r}
+modelo2 <- lm(wage ~ education + experience + ability + education01 + education02 + siblings, data = koopand)
+
+summary(modelo2)$coefficients |> 
+  knitr::kable(
+    caption = "Coeficientes de MCO en la regresión de $y$ sobre $X_1$ y $X_2$",
+    col.names = c("Variable", "Estimación", "Error estándar", "Valor t", "Valor p"),
+    digits = 3
+  )
+
+```
+
+\newpage
 
 c)  Regrese cada una de las tres variables en X2 sobre todas las variables en X1. Estas nuevas variables denótenlas como $X^∗_2$ ¿Cuáles son las medias muestrales de estas variables? Explique el resultado.
 
+```{r, fig.width=3, fig.height=2}
+modelo31 <- lm(education01 ~ education + experience + ability, data = koopand)
+modelo32 <- lm(education02 ~ education + experience + ability, data = koopand)
+modelo33 <- lm(siblings ~ education + experience + ability, data = koopand)
+
+# stargazer::stargazer(modelo31, modelo32, modelo33, type = "text")
+```
+
+```{r}
+
+koopandmodelo <- koopand |> 
+  mutate(
+    education01 = predict(modelo31),
+    education02 = predict(modelo32),
+    siblings = predict(modelo33)
+  )
+```
+
+```{r}
+koopandmodelo |> 
+  summarise(
+    education01 = mean(education01, na.rm = TRUE),
+    education02 = mean(education02, na.rm = TRUE),
+    siblings = mean(siblings, na.rm = TRUE)) |> 
+  tidyr::pivot_longer(
+    cols = everything(),
+    names_to = "variable",
+    values_to = "media") |> 
+  knitr::kable(
+    caption = "Medias muestrales de las variables $X^*_2$",
+    col.names = c("Variable", "Media"),
+    digits = 3
+  )
+```
+
+*Las medias muéstrales de las variables en* $X^*_2$ *representan el valor promedio de cada variable después de haber sido ajustadas por las variables en* $X_1$*. Esto significa que estas medias reflejan el efecto de la educación, experiencia y habilidad sobre la educación de los padres y el número de hermanos, eliminando la variabilidad que podría estar asociada con estas variables. En otras palabras, las medias muéstrales indican el nivel promedio de educación de los padres y el número de hermanos, controlando por las características del individuo como la educación, experiencia y habilidad.*
+
+d)  Compute $R2 = 1 − \frac{e′e}{y′M_0y}$ para la regresión de $y$ sobre X1 y X2. Repita el cómputo para el caso en la que el término constante es omitido de X1. ¿Qué sucede con R2?
+
+```{r}
+r2_modelo1 <- summary(modelo1)$r.squared
+r2_modelo2 <- summary(modelo2)$r.squared
+
+modelo11 <- lm(wage ~ education + experience + ability - 1, data = koopand)
+r2_modelo11 <- summary(modelo11)$r.squared
+
+modelo21 <- lm(wage ~ education + experience + ability + education01 + education02 + siblings - 1, data = koopand)
+r2_modelo21 <- summary(modelo21)$r.squared
+
+
+tibble::tibble(
+  Modelo = c("y ~ X1", "y ~ X2", "y ~ X1", "y ~ X2"),
+  Condicion = c("Con constante", "Con constante", "Sin constante", "Sin constante"),
+  R2 = c(r2_modelo1, r2_modelo2, r2_modelo11, r2_modelo21)) |> 
+  mutate(
+    Modelo = factor(Modelo, levels = c("y ~ X1", "y ~ X2"))
+  ) |> 
+  arrange(Modelo) |>
+  knitr::kable(
+    caption = "Valores de $R^2$ para los modelos",
+    col.names = c("Modelo", "Condición", "$R^2$"),
+    digits = 3
+  )
+
+```
+
+*En esta regresión cuando se omite el término constante, el* $R^2$ *aumenta, lo que indica que el modelo sin constante explica una mayor proporción de la variabilidad de la variable dependiente. El problema de esto, es que al eliminar el término constante estamos omitiendo la media de la variable dependiente, en este caso la media del salario, lo que puede llevar a una interpretación errónea de los resultados. Con esto el modelo ya no explica la variación respecto a la media de* $y$*.*
+
+e)  Compute el R2 para la regresión con todas las variables incluyendo el término constante. Interprete los resultados.
+
+*El* $R^2$ *para la regresión con todas las variables incluyendo el término constante es `r r2_modelo2` . Esto nos indica que aproximadamente el 51.6% de la variabilidad del salario puede ser explicada por las variables independientes incluidas en el modelo (educación, experiencia, habilidad, educación de los padres y número de hermanos).*
+
 <!-- -->
 
-7.  Suponga que usted tiene dos estimadores insesgados e independientes del mismo parámetro $\theta$, por ejemplo $\hat{\theta}_1$ y $\hat{\theta}_2$, con la varianzas diferentes $v_1$ y $v_2$. Qué combinacón lineal $\hat{\theta}=c_1\hat{\theta_1}+c_2\hat{\theta_2}$ es el estimador insesgado de varianza mínima?
+<!-- 7.  Suponga que usted tiene dos estimadores insesgados e independientes del mismo parámetro $\theta$, por ejemplo $\hat{\theta}_1$ y $\hat{\theta}_2$, con la varianzas diferentes $v_1$ y $v_2$. Qué combinacón lineal $\hat{\theta}=c_1\hat{\theta_1}+c_2\hat{\theta_2}$ es el estimador insesgado de varianza mínima? -->
 
-Respuesta:
+<!-- Respuesta: -->
 
-Para que $\hat{\theta}$ sea insesgado, se debe cumplir que $E[\hat{\theta}] = \theta$. Dado que ambos estimadores son insesgados, tenemos:
+<!-- Para que $\hat{\theta}$ sea insesgado, se debe cumplir que $E[\hat{\theta}] = \theta$. Dado que ambos estimadores son insesgados, tenemos: -->
 
-$$E[\hat{\theta}] = c_1 E[\hat{\theta}_1] + c_2 E[\hat{\theta}_2] = c_1 \theta + c_2 \theta = (c_1 + c_2) \theta$$
+<!-- $$E[\hat{\theta}] = c_1 E[\hat{\theta}_1] + c_2 E[\hat{\theta}_2] = c_1 \theta + c_2 \theta = (c_1 + c_2) \theta$$ -->
 
-Para que $\hat{\theta}$ sea insesgado, necesitamos que $c_1 + c_2 = 1$.
+<!-- Para que $\hat{\theta}$ sea insesgado, necesitamos que $c_1 + c_2 = 1$. -->
 
-Para minimizar la varianza de $\hat{\theta}$, utilizamos la propiedad de que la varianza de una combinación lineal de variables aleatorias independientes es la suma de las varianzas individuales:
+<!-- Para minimizar la varianza de $\hat{\theta}$, utilizamos la propiedad de que la varianza de una combinación lineal de variables aleatorias independientes es la suma de las varianzas individuales: -->
 
-$$Var(\hat{\theta}) = Var(c_1 \hat{\theta}_1 + c_2 \hat{\theta}_2) = c_1^2 Var(\hat{\theta}_1) + c_2^2 Var(\hat{\theta}_2) = c_1^2 v_1 + c_2^2 v_2$$
+<!-- $$Var(\hat{\theta}) = Var(c_1 \hat{\theta}_1 + c_2 \hat{\theta}_2) = c_1^2 Var(\hat{\theta}_1) + c_2^2 Var(\hat{\theta}_2) = c_1^2 v_1 + c_2^2 v_2$$ -->
 
-Para minimizar esta varianza bajo la restricción $c_1 + c_2 = 1$, podemos usar el método de Lagrange. Definimos la función objetivo:
+<!-- Para minimizar esta varianza bajo la restricción $c_1 + c_2 = 1$, podemos usar el método de Lagrange. Definimos la función objetivo: -->
 
-$$L(c_1, c_2, \lambda) = c_1^2 v_1 + c_2^2 v_2 + \lambda (c_1 + c_2 - 1)$$ Luego, derivamos respecto a $c_1$, $c_2$ y $\lambda$ y igualamos a cero:
+<!-- $$L(c_1, c_2, \lambda) = c_1^2 v_1 + c_2^2 v_2 + \lambda (c_1 + c_2 - 1)$$ Luego, derivamos respecto a $c_1$, $c_2$ y $\lambda$ y igualamos a cero: -->
 
-$$\frac{\partial L}{\partial c_1} = 2c_1 v_1 + \lambda = 0$$ $$\frac{\partial L}{\partial c_2} = 2c_2 v_2 + \lambda = 0$$ $$\frac{\partial L}{\partial \lambda} = c_1 + c_2 - 1 = 0$$ Resolviendo este sistema de ecuaciones, obtenemos:
+<!-- $$\frac{\partial L}{\partial c_1} = 2c_1 v_1 + \lambda = 0$$ $$\frac{\partial L}{\partial c_2} = 2c_2 v_2 + \lambda = 0$$ $$\frac{\partial L}{\partial \lambda} = c_1 + c_2 - 1 = 0$$ Resolviendo este sistema de ecuaciones, obtenemos: -->
 
-$$c_1 = \frac{v_2}{v_1 + v_2}$$ $$c_2 = \frac{v_1}{v_1 + v_2}$$
+<!-- $$c_1 = \frac{v_2}{v_1 + v_2}$$ $$c_2 = \frac{v_1}{v_1 + v_2}$$ -->
+
+9.  **Considere el siguiente modelo de función de producción para un conjunto de N industrias.**
+
+$$Y_i = A_i K_i^{\alpha} L_i^{\beta}$$
+
+$$A_i=B\ exp(\epsilon_i)$$
+
+Donde $y_i$ es el nivel de producción en la industria $i$, $A$ es la productividad en la industria que depende de la productividad agregada $B$ común a todos los sectores y de un componente idiosincrático asociado a la industria. Asimismo, $K$ y $L$ son el factor capital y trabajo, respectivamente.
+
+a)  Tal como está formulado ¿por qué no es posible estimar este modelo por mínimos cuadrados ordinarios?
+
+*Este modelo no es posible estimar por mínimos cuadrados ordinarios (MCO) porque violaría el primer supuesto de linealidad, ya que no es lineal en los parámetros. La función de producción es una función no lineal en los parámetros* $\alpha$ *y* $\beta$*, lo que significa que no se puede expresar como una combinación lineal de los parámetros.*
+
+b)  Aplique la transformación apropiada para que este modelo sea estimable por MCO y formule el nuevo modelo econométrico.
+
+*Para transformar el modelo de función de producción a una forma lineal, podemos tomar el logaritmo natural de ambos lados de la ecuación. Esto nos dará una forma lineal en los parámetros:*
+
+$$\log(Y_i) = \log(A_i) + \alpha \log(K_i) + \beta \log(L_i)$$
+
+<!-- Ejercicios de bases de wooldridge -->
+
+10) **La base de datos `k401k` es un subconjunto de los datos analizados por Papke (1995) para estudiar la relación entre la participación en un plan de pensión y la generosidad del plan. La variable `prate` es el porcentaje de trabajadores que están inscritos en el plan y que tienen cuenta activa; esta es la variable que se quiere explicar. La medida de la generosidad es la tasa de contribución (de la empresa) al plan, `mrate`. Esta variable es la cantidad promedio con la que la empresa contribuye al plan de cada trabajador por cada peso que aporte el trabajador. Por ejemplo, si *mrate = 0.50*, entonces a una contribución de 1 del trabajador corresponde una contribución de 50 centavos de la empresa.**
+
+<!-- -->
+
+i)  Encuentre el promedio de la tasa de participación y el promedio de la tasa de contribución para la muestra.
+
+```{r}
+data10 <- wooldridge::k401k
+
+data10 |> 
+  summarise(
+    prate = mean(prate, na.rm = TRUE),
+    mrate = mean(mrate, na.rm = TRUE)) |>
+  mutate(
+    across(everything(), ~round(.x, digits = 2)),
+    medida = "Promedio", 
+         .before = prate) |> 
+  janitor::clean_names(case = "title") |> 
+  knitr::kable(
+    caption = "Promedio de la tasa de participación y contribución",
+    col.names = c("Medida", "prate", "mrate"),
+    digits = 2
+  )
+```
+
+ii) Ahora, estime el modelo
+
+$$prate = \beta_0 + \beta_1\ mrate + u$$
+
+y de los resultados, el tamaño de la muestra y R-cuadrada.
+
+```{r}
+modelo101 <- lm(prate ~ mrate, data = data10)
+
+coeficientes <- coef(summary(modelo101))
+
+rownames(coeficientes) <- c("$\\beta_0$", "$\\beta_1$")
+
+knitr::kable(
+  coeficientes,
+  caption = "Resultados del modelo de regresión 10",
+  col.names = c("Estimación", "Error estándar", "Valor t", "Valor p"),
+  digits = 2,
+  escape = FALSE
+)
+
+```
+
+iii) Interprete el intercepto de la ecuación. Interprete también el coeficiente de mrate.
+
+*El intercepto de la ecuación representa el valor esperado de la tasa de participación (`prate`) cuando la tasa de contribución (`mrate`) es cero. En este caso, el intercepto es `r round(coeficientes[1, 1], 2)`, lo que indica que si no hay contribución por parte de la empresa, la tasa de participación esperada sería de aproximadamente `r round(coeficientes[1, 1], 2)`.*
+
+*El coeficiente de `mrate` es `r round(coeficientes[2, 1], 2)`, lo que indica que por cada aumento de una unidad en la tasa de contribución (`mrate`), la tasa de participación (`prate`) aumenta en aproximadamente `r round(coeficientes[2, 1], 2)` puntos porcentuales, manteniendo todo lo demás constante. Esto sugiere que una mayor generosidad del plan de pensión está asociada con una mayor participación en el plan.*
+
+iv) Determine la prate que se predice para mrate = 3.5. ¿Es razonable esta predicción? Explique qué ocurre aquí.
+
+$$prate = 83.08+5.86\ (3.5)$$
+
+*Cuando mrate = 3.5, la tasa de participación (`prate`) aproximada es `r round(83.08 + 5.86 * 3.5, 2)`. Este valor de 103.59 no es razonable, ya que la tasa de participación no puede ser mayor al 100 %. En este caso, la relación entre `prate` y `mrate` puede no ser lineal o puede haber un límite superior en la tasa de participación que el modelo no captura adecuadamente.*
+
+v)  ¿Qué tanto de la variación en `prate` es explicada por `mrate`? En su opinión, ¿es mucho?
+
+*El valor de R-cuadrada del modelo es `r round(summary(modelo101)$r.squared, 3)`, lo que indica que aproximadamente el `r round(summary(modelo101)$r.squared  *100, 2)` % de la variación en la tasa de participación (`prate`) es explicada por la tasa de contribución (`mrate`).*
+
+*Un 7.6 % de la variación en `prate` explicada por `mrate` puede considerarse relativamente bajo, lo que sugiere que hay otros factores no incluidos en el modelo que también influyen en la tasa de participación. En mi opinión, esto indica que la generosidad del plan de pensión es un factor importante, pero no el único determinante de la participación en el plan.*
+
+**11) Un problema de interés para los funcionarios de salud (y para otros) es determinar los efectos que el fumar durante el embarazo tiene sobre la salud infantil. Una medida de la salud infantil es el peso al nacer; un peso demasiado bajo puede ubicar al niño en riesgo de contraer varias enfermedades. Ya que es probable que otros factores que afectan el peso al nacer están correlacionados con fumar, deben considerarse. Por ejemplo, un nivel de ingresos más alto en general da como resultado el acceso a mejores cuidados prenatales y a una mejor nutrición de la madre.**
+
+Una encuación que reconce estos factores es:
+
+$$bwght=\beta_0\ +\ \beta_1cigs\ +\ \beta_2faminic\ +\ u$$
+
+i)  ¿Cuál es el signo más probable para $\beta_2$?
+
+*El signo más probable para* $\beta_2$ es positivo. Esto se debe a que un nivel de ingresos más alto generalmente está asociado con un mejor acceso a cuidados prenatales y una mejor nutrición, lo que puede resultar en un mayor peso al nacer del bebé. Por lo tanto, se espera que un aumento en el ingreso familiar (`faminic`) esté asociado con un aumento en el peso al nacer (`bwght`).
+
+ii) ¿Cree que cigs y faminc están correlacionados? Explique por qué la correlación puede ser positiva o negativa.
+
+*Es probable que `cigs` (número de cigarrillos fumados durante el embarazo) y `faminic` (ingreso familiar) estén correlacionados. La correlación puede ser negativa, ya que las mujeres con ingresos más altos pueden tener un mayor acceso a información sobre los riesgos del fumar durante el embarazo y, por lo tanto, pueden fumar menos.*
+
+*Por otro lado, también podría haber una correlación positiva si las mujeres con mayores ingresos tienen más recursos para comprar cigarrillos. Sin embargo, en general, se espera que la correlación sea negativa, ya que los ingresos más altos suelen estar asociados con una mayor conciencia de la salud y un menor consumo de tabaco.*
+
+iii) Ahora, estime la ecuación con y sin faminc utilizando los datos del archivo bwght. Dé los resultados en forma de ecuación incluyendo el tamaño de la muestra y la R cuadrada. Explique sus resultados enfocándose en si el añadir faminc modifica de manera sustancial el efecto esperado de cigs sobre bwght.
+
+```{r fig.align="center", fig.width=6, fig.height=4}
+datos11 <- wooldridge::bwght
+
+modelo111 <- lm(bwght ~ cigs, data = datos11)
+modelo112 <- lm(bwght ~ cigs + faminc, data = datos11)
+
+stargazer::stargazer(
+  modelo111, modelo112,
+  type = "text",
+  title = "Resultados de la regresión de bwght sobre cigs y faminc",
+  dep.var.labels = "Peso al nacer (bwght)",
+  covariate.labels = c("Cigarrillos (cigs)", "Ingreso familiar (faminc)"),
+  omit.stat = c("f", "ser"),
+  digits = 3
+)
+
+
+```
+
+**Modelos estimado:**
+
+$$bwght=119.772\ -0.514\ cigs\ $$
+
+$$bwght=116.974\ -0.463\ cigs\ +\ 0.093\ faminic$$
+
+*Al agregar `faminic` al modelo, el coeficiente de `cigs` cambia de -0.514 a -0.463, lo que indica que el efecto negativo del fumar durante el embarazo sobre el peso al nacer se reduce ligeramente al controlar por el ingreso familiar. Esto sugiere que parte del efecto negativo de `cigs` sobre `bwght` puede estar mediado por el nivel de ingresos, ya que las mujeres con mayores ingresos pueden tener un mejor acceso a cuidados prenatales y una mejor nutrición, lo que podría mitigar el impacto negativo del fumar.*
+
+12) **El modelo siguiente puede usarse para estudiar si los gastos de campaña afectan los resultados de las elecciones:**
+
+$$voteA=\beta_0\ +\ \beta_1expendA\ +\ \beta_2expendB\ +\ \beta_3prtysstrA\ + u$$
+
+donde `voteA` es el porcentaje de votos recibidos por el candidato A, `expendA` y `expendB` son los gastos de campaña del candidato A y del candidato B y `prtystrA` es una medida de la fortaleza del partido del candidato A (el porcentaje de votos que obtuvo el partido de A en la elección presidencial más reciente).
+
+i)  ¿Cuál es la interpretación de $\beta_1$?
+
+*El coeficiente* $\beta_1$ representa el cambio esperado en el porcentaje de votos recibidos por el candidato A (`voteA`) por cada unidad adicional gastada en la campaña por el candidato A (`expendA`), manteniendo constantes los demás factores en el modelo. En otras palabras, indica cuánto se espera que aumente el porcentaje de votos para A por cada unidad adicional de gasto en su campaña.
+
+ii) Use los datos en vote1 y Estime el modelo e interprete los coeficientes y la bonda de ajuste.
+
+```{r}
+datos12 <- wooldridge::vote1
+
+modelo121 <- lm(voteA ~ expendA + expendB + prtystrA, data = datos12)
+
+
+summary(modelo121)$coefficients |> 
+  knitr::kable(
+    caption = "Resultados del modelo de regresión de voteA sobre expendA, expendB y prtystrA",
+    col.names = c("Variable", "Parametro", "Error estándar", "Valor t", "Valor p"),
+    digits = 3
+  )
+```
+
+*Los coeficientes del modelo indican lo siguiente:*
+
+-   *El coeficiente de `expendA` es positivo, lo que sugiere que un aumento en los gastos de campaña del candidato A está asociado con un aumento en el porcentaje de votos recibidos por él. Por cada unidad adicional gastada por el partido A, se espera que su porcentaje de votos **aumente** en aproximadamente 0.034 puntos porcentuales, manteniendo constantes los demás factores.\**
+
+-   *El coeficiente de `expendB` es negativo, lo que indica que un aumento en los gastos de campaña del candidato B está asociado con una disminución en el porcentaje de votos recibidos por A. Por cada unidad adicional gastada por B, se espera que el porcentaje de votos para A **disminuya** en aproximadamente 0.035 puntos porcentuales, manteniendo constantes los demás factores.*
+
+-   *El coeficiente de `prtystrA` es positivo, lo que sugiere que una mayor fortaleza del partido del candidato A está asociada con un mayor porcentaje de votos recibidos por él. Por cada punto porcentual adicional en la fortaleza del partido de A, se espera que su porcentaje de votos **aumente** en aproximadamente 0.34 puntos porcentuales, manteniendo constantes los demás factores.*
+
+*El valor de R-cuadrada del modelo es `r round(summary(modelo121)$r.squared, 3)`, lo que indica que aproximadamente el `r round(summary(modelo121)$r.squared * 100, 2)` % de la variabilidad en el porcentaje de votos recibidos por A es explicada por los gastos de campaña y la fortaleza del partido.*
+
+13) **Para este ejercicio emplee los datos del archivo wage2.**
+
+Considere la ecuación estándar para salario
+
+$$wage = \beta_0 + \beta_1educ + \beta_2exper + \beta_3tenure + u$$
+
+i)  Interprete los coeficientes del modelo.
+
+$\beta_0$ *es el salario promedio cuando `educ`, `exper` y `tenure` son cero.* $\beta_1$ *es el cambio esperado en el salario por cada año adicional de educación, manteniendo constantes los demás factores.* $\beta_2$ *es el cambio esperado en el salario por cada año adicional de experiencia laboral, para los individuos con el mismo nivel de educación y antigüedad.* $\beta_3$ *es el cambio esperado en el salario por cada año adicional de antigüedad en la empresa, para los individuos con el mismo nivel de educación y experiencia.*
+
+ii) Estime el modelo e interprete los coeficientes.
+
+```{r}
+datos13 <- wooldridge::wage2
+
+modelo13 <- lm(wage ~ educ + exper + tenure, data = datos13)
+
+summary(modelo13)$coefficients |> 
+  knitr::kable(
+    caption = "Resultados del modelo de regresión de wage sobre educ, exper y tenure",
+    col.names = c("Variable", "Estimación", "Error estándar", "Valor t", "Valor p"),
+    digits = 3
+  )
+```
+
+$$wage = -276+74.42educ+14.89exper+8.26ternure$$
+
+*Cuando `educ` aumenta en 1 año, el salario (`wage`) aumenta en aproximadamente 74.42 unidades monetarias, manteniendo constantes la experiencia (`exper`) y la antigüedad (`tenure`). Si `exper` aumenta en 1 año, el salario (`wage`) aumenta en aproximadamente 14.89 unidades monetarias, manteniendo constantes la educación (`educ`) y la antigüedad (`tenure`). Finalmente, si `tenure` aumenta en 1 año, el salario (`wage`) aumenta en aproximadamente 8.26 unidades monetarias, manteniendo constantes la educación (`educ`) y la experiencia (`exper`).*
+
+*Lo que resulta poco intuitivo es el valor del intercepto, que resulta negativo. Esto indica que, si una persona no tiene educación, experiencia ni antigüedad, el modelo predice un salario negativo, lo cual no tiene sentido en la práctica. Sin embargo, esto es común en modelos de regresión lineal y no debe interpretarse literalmente.*
+
+iii) Establezca la hipótesis nula de que un año más de experiencia en la fuerza de trabajo general tiene el mismo efecto sobre `wage` que un año más de antigüedad en el empleo actual.
+
+Hipótesis nula:
+
+$$H_0: \beta_2 = \beta_3$$
+
+Hipotesis alternativa: $$H_a: \beta_2 \neq \beta_3$$
+
+iv) Al nivel de significancia de 5% pruebe la hipótesis nula del inciso iii) contra la alternativa de dos colas. ¿Qué puede concluir?
+
+```{r}
+#|echo= true
+#|fig.align= "center"
+car::linearHypothesis(modelo13, c("exper = tenure"))
+```
+
+*Con un valor `p-value` de 0.1477, no podemos rechazar la hipótesis nula al nivel de significancia del 5%. Esto sugiere que no hay evidencia suficiente para afirmar que un año más de experiencia en la fuerza de trabajo general **tiene un efecto diferente** sobre el salario (`wage`) en comparación con un año más de antigüedad en el empleo actual.*
+
+v)  Estime nuevamente el modelo, pero ahora la variable dependiente está en logaritmo (natural) e interprete los coeficientes.
+
+$$log(wage) = \beta_0 + \beta_1educ + \beta_2exper + \beta_3tenure + u$$
+
+```{r}
+modelo132 <- lm(log(wage) ~ educ + exper + tenure, data = datos13)
+summary(modelo132)$coefficients |> 
+  knitr::kable(
+    caption = "Resultados del modelo de regresión de log(wage) sobre educ, exper y tenure",
+    col.names = c("Variable", "Estimación", "Error estándar", "Valor t", "Valor p"),
+    digits = 3
+  )
+```
+
+**Interpretación de los coeficientes**
+
+*El coeficiente de `educ` es 0.075, lo que indica que un año adicional de educación está asociado con un aumento del 7.5 % en el salario, manteniendo constantes la experiencia y la antigüedad. El coeficiente de `exper` es 0.015, lo que sugiere que un año adicional de experiencia laboral está asociado con un aumento del 1.5% en el salario, manteniendo constantes la educación y la antigüedad. Finalmente, el coeficiente de `tenure` es 0.013, lo que indica que un año adicional de antigüedad en la empresa está asociado con un aumento del 0.13% en el salario, manteniendo constantes la educación y la experiencia.*
+
+14) **Utilice los datos hprice1 para estimar el siguiente modelo:**
+
+$$price=\beta_0\ +\ \beta_1sqrft\ +\ \beta_2bdrms\ +\ u$$
+
+donde `price` es el precio de las casas en miles de dólares.
