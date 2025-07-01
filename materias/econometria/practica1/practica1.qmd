@@ -86,20 +86,17 @@ encft |>
       edad >= 35 & edad < 45 ~ "35-44",
       edad >= 45 & edad < 55 ~ "45-54",
       edad >= 55 & edad < 65 ~ "55-64",
-      TRUE ~ "65 o más"),
-    rango_edad = factor(rango_edad, 
-                        levels = c("Menos de 25", "25-34", "35-44", "45-54", "55-64", "65 o más")
-                        
-                        )) |> 
+      TRUE ~ "65 o más")) |> 
+  mutate(rango_edad = factor(rango_edad, 
+                        levels = c("Menos de 25", "25-34", "35-44", "45-54", "55-64", "65 o más"))) |> 
   summarise(
     percentil_5  = quantile(wage_hours, 0.05, na.rm = TRUE),
     percentil_25 = quantile(wage_hours, 0.25, na.rm = TRUE),
     percentil_50 = quantile(wage_hours, 0.50, na.rm = TRUE),
     percentil_75 = quantile(wage_hours, 0.75, na.rm = TRUE),
     percentil_95 = quantile(wage_hours, 0.95, na.rm = TRUE), 
-    .by = "rango_edad"
-  ) |> 
-  
+    .by = "rango_edad") |>
+  arrange(rango_edad) |> 
   knitr::kable(
     caption = "Distribución de edad por percentil de ingreso",
     col.names = c("Rango de Edad", "Percentil 5", "Percentil 25", "Percentil 50", "Percentil 75", "Percentil 95"),
@@ -524,4 +521,9 @@ summary(modelo132)$coefficients |>
 
 $$price=\beta_0\ +\ \beta_1sqrft\ +\ \beta_2bdrms\ +\ u$$
 
-donde `price` es el precio de las casas en miles de dólares.
+donde $price$ es el precio de las casas en miles de dólares.
+
+```{r}
+# Vamos a gráficar los residuos del último modelo
+
+```
