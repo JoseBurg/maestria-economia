@@ -1,0 +1,67 @@
+---
+title: "Notas sobre econometría"
+subtitle: "Máxima verosimilitud"
+author: "José Burgos"
+format: html
+editor: visual
+---
+
+## Máxima verosimilitud
+
+La distribución de probabilidad conjunta de una muestra aleatoria es el producto de las distribuciones de probabilidad individuales. La función de verosimilitud es la misma función, pero vista como una función de los parámetros del modelo, dados los datos observados.
+
+$$
+f(y_1, y_2, \ldots, y_n | \theta) = \prod_{i=1}^{n} f(y_i | \theta)
+$$
+
+Es conocido como la función de verosimilitud porque mide la "verosimilitud" de los parámetros dados los datos observados. La estimación por máxima verosimilitud (MLE) consiste en encontrar los valores de los parámetros que maximizan esta función de verosimilitud.
+
+Note que la función de verosimilitud es una función de los parámetros del modelo, no de los datos. Por lo tanto, al maximizar la función de verosimilitud, estamos buscando los valores de los parámetros que hacen que los datos observados sean más probables.
+
+Ambas funciones son las mismas, pero se escribe de manera diferente para enfatizar diferentes aspectos del problema estadístico. La función de densidad de probabilidad se usa comúnmente en el contexto de la inferencia estadística, mientras que la función de verosimilitud se usa en el contexto de la estimación de parámetros.
+
+Suponga que:
+
+$$
+\epsilon_i \sim N(0, \sigma^2)
+$$
+
+Entonces: $$
+y_i = X_i \beta + \epsilon_i
+$$
+
+Las observaciones no son i.i.d (tienen difenrentes medias), pero son independientes. La función de densidad condicional es:
+
+$$
+lnL(\theta|y,X) = \sum_{i=1}^{n} ln f(y_i|X_i, \theta)
+$$
+
+$$
+= -\frac{1}{2}   \sum\left(ln(\sigma^2) + ln(2\pi) + \frac{(y_i - X_i'\beta)^2}{\sigma^2}\right)
+$$
+
+Donde $X$ es una matriz $nxK$
+
+El objetivo es la obtención de estimaciones de $\theta$ que maximizan la función de verosimilitud.
+
+El principio de maxima verosimilitud establece que las estimaciones de los parámetros que maximizan la función de verosimilitud son las mejores estimaciones posibles, en el sentido de que son consistentes, asintóticamente normales y eficientes.
+
+La condición necesaria para la maximización es que la derivada de la función de verosimilitud con respecto a los parámetros sea igual a cero:
+
+$$
+\frac{\partial lnL(\theta|data)}{\partial \theta} = 0
+$$ La cual se denomina ecuación de verosimilitud.
+
+### Teorema: Propiedades de un MLE
+
+Bajo ciertas condiciones regulares, el MLE tiene las siguientes propiedades asintóticas: 1. **Consistencia**: El MLE converge en probabilidad al valor verdadero del parámetro a medida que el tamaño de la muestra tiende a infinito. $$
+plim_{\text{n} \to \infty} \hat{\theta}_{MLE} = \theta_0
+$$ 2. **Asintóticamente normal**: La distribución del MLE, cuando se escala adecuadamente, converge a una distribución normal. $$
+\sqrt{n}(\hat{\theta}_{MLE} - \theta_0) \xrightarrow{d} N(0, I^{-1}(\theta_0))
+$$
+
+3.  **Eficiencia**: El MLE alcanza la cota de Cramér-Rao, lo que significa que tiene la varianza más baja entre todos los estimadores insesgados.
+
+$$
+[]
+$$
