@@ -1,0 +1,156 @@
+---
+title: "variables-instrumentrales"
+subtitle: clase 8
+format: html
+editor: visual
+---
+
+### Fuentes de endogeneidad
+
+$$
+E(\epsilon | X) = 0
+$$
+
+Si no se cumple, entonces la variable explicativa $X$ es endógena. Esto puede ocurrir por:
+
+1.  **Omissión de variables**: Si hay una variable relevante que afecta tanto a la variable dependiente como a la independiente, y no se incluye en el modelo.
+
+2.  **Medición errónea**: Si la variable independiente está medida con error, esto puede introducir sesgo en la estimación.
+
+3.  **Causalidad inversa**: Si la variable dependiente afecta a la variable independiente, esto también puede causar endogeneidad.
+
+### Variables instrumentales
+
+Una variable instrumental es una variable que se utiliza para corregir la endogeneidad en un modelo de regresión. Debe cumplir dos condiciones: 1. **Relevancia**: La variable instrumental debe estar correlacionada con la variable endógena.
+
+$$
+cov(Z, X) \neq 0
+$$
+
+2.  **Exogeneidad**: La variable instrumental no debe estar correlacionada con el término de error del modelo.
+
+$$
+cov(Z, \epsilon) = 0
+$$
+
+### Mínimos cuadrados en dos etapas (2SLS o bmc2e)
+
+El método de Mínimos Cuadrados en Dos Etapas (2SLS) es una técnica utilizada para estimar modelos con variables instrumentales. El proceso consta de dos etapas:
+
+1.  **Primera etapa**: Se regresa la variable endógena $X$ sobre la variable instrumental $Z$ y otras variables exógenas. Esto produce un valor ajustado de $X$, denotado como $\hat{X}$.
+
+$$ 
+   X = \alpha_0 + \alpha_1 Z + \alpha_2 W + u 
+   $$ donde $W$ son otras variables exógenas. La ecuación se puede reescribir para obtener el valor ajustado:
+
+$$
+   \hat{X} = \hat{\alpha_0} + \hat{\alpha_1} Z + \hat{\alpha_2} W
+   $$
+
+2.  **Segunda etapa**: Se regresa la variable dependiente $Y$ sobre el valor ajustado $\hat{X}$ y otras variables exógenas. $$ 
+    Y = \beta_0 + \beta_1 \hat{X} + \beta_2 W + v 
+    $$
+
+    Donde $v$ es el nuevo término de error. La estimación de $\beta_1$ es la que se busca, y se interpreta como el efecto causal de $X$ sobre $Y$.
+
+#### Estimación por VI de una ecuación de oferta de trabajo
+
+Suponga la siguiente ecuación de oferta de trabajo proviene de un sistema que modela el mercado laboral:
+
+$$
+horas_i = \alpha_0 + \alpha_1 salario_i + \alpha_2 educacion_i + \alpha_3 Union_i + \alpha_4 Fem_i + u_i
+$$
+
+El problema radica en que el salario esta correlacionado con $u$, se consideran dos conjuntos de instrumentos:
+
+$$
+Z_i = [1, educacion_i, Union_i, Fem_i]
+$$
+
+$$
+Z_i = [1, educacion_i, Union_i]
+$$
+
+donde $educacion_i$ es el nivel de educación del individuo, $Union_i$ indica si el individuo es miembro de un sindicato y $Fem_i$ indica si el individuo es mujer.
+
+### Ejemplo: estimación por variables instrumentales de una ecuación de oferta de trabajo.
+
+```{r, eval=FALSE}
+#|message: false
+#|evaluate: false
+
+library(tidyverse)
+library(AER)
+
+# Mínimo cuadrados ordinarios (OLS) o ecuación en forma reducida
+mod.OLS <- lm(WKS ~ LWAGE + ED + UNION + FEM)
+
+# Variables instrumentales en dos etapas (2SLS)
+# Etapa 1:
+mod.IV <- ivreg(WKS ~ LWAGE + ED + UNION + FEM | ED + UNION, data = CPS85)
+
+# Etapa 2:
+mod.IV_stage2 <- lm(WKS ~ LWAGE + ED + UNION + FEM, data = CPS85, weights = mod.IV$fitted.values)
+
+stargazer::stargazer(mod.OLS, mod.IV, mod.IV_stage2,
+               type = "text",
+               title = "Resultados de la regresión OLS y 2SLS",
+               dep.var.labels = "Horas trabajadas (WKS)",
+               covariate.labels = c("Logaritmo del salario (LWAGE)", "Educación (ED)", "Sindicato (UNION)", "Mujer (FEM)"),
+               omit.stat = c("f", "ser"),
+               digits = 3)
+```
+
+<!-- Incluir nota de quarto -->
+
+::: callout-warning icon=false \## warning
+
+Cuando utilizamos variables instrumentrales no le damos mucha importancia a la bondad de ajuste del modelo, ya que el objetivo es corregir la endogeneidad y no necesariamente mejorar el ajuste del modelo. Por lo tanto, no se reporta el R-cuadrado ni otras medidas de bondad de ajuste.
+
+:::
+
+### Contraste de hipotesis
+
+### Instrumentos débiles
+
+Cuales son los efectos?
+
+Por un lado
+
+Como contrasta la debilidad de los instrumentos?
+
+1.  Se estima el modelo por MCO y por MC2E
+
+2.  Para la variable endógena k se construye el llamado estadistico de Goodness of fit (GFI): $$
+    GFI = \frac{R^2_{MCO}}{R^2_{MC2E}}
+    $$
+
+3.  Se construye el siguiente estadístico de contraste:
+
+$$
+F = \frac{(R^2_{MCO} - R^2_{MC2E})/(K-1)}{(1-R^2_{MCO})/(N-K)}
+$$
+
+4.  Si solo hay un instrumento, entonces $K=2$ y el estadístico de contraste es:
+
+$$
+F = \frac{(R^2_{MCO} - R^2_{MC2E})}{(1-R^2_{MCO})/(N-2)}
+$$
+
+5.  Si $F < 10$, entonces se dice que los instrumentos son débiles.
+
+### Ejemplo: Contraste de instrumentos débiles
+
+```{r, eval=FALSE}
+#|message: false
+#|evaluate: false
+
+library(wooldridge)
+wages <- wage1
+
+mod.OLS <- lm(log(wage) ~ educ + exper + I(exper^2), data = wages)
+
+
+```
+
+Si el nivel de significancia del instrumento es significativo, entonces se puede concluir que el instrumento es relevante. En caso de saber si es exógeno, se puede utilizar el estadístico de Hausman. Si el estadístico es significativo, entonces se puede concluir que el instrumento es exógeno.
