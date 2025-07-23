@@ -130,7 +130,8 @@ window.Quarto = {
 <h3 class="anchored" data-anchor-id="fuentes-de-endogeneidad">Fuentes de endogeneidad</h3>
 <p><span class="math display">\[
 E(\epsilon | X) = 0
-\]</span> Si no se cumple, entonces la variable explicativa <span class="math inline">\(X\)</span> es endógena. Esto puede ocurrir por:</p>
+\]</span></p>
+<p>Si no se cumple, entonces la variable explicativa <span class="math inline">\(X\)</span> es endógena. Esto puede ocurrir por:</p>
 <ol type="1">
 <li><p><strong>Omissión de variables</strong>: Si hay una variable relevante que afecta tanto a la variable dependiente como a la independiente, y no se incluye en el modelo.</p></li>
 <li><p><strong>Medición errónea</strong>: Si la variable independiente está medida con error, esto puede introducir sesgo en la estimación.</p></li>
@@ -213,7 +214,191 @@ Z_i = [1, educacion_i, Union_i]
 </div>
 <!-- Incluir nota de quarto -->
 <p>::: callout-warning icon=false ## warning</p>
-<p>Cuando utilizamos variables instrumentrales no le damos mucha importancia a la bondad de ajuste del modelo, ya que el objetivo es corregir la endogeneidad y no necesariamente mejorar el ajuste del modelo. Por lo tanto, no se reporta el R-cuadrado ni otras medidas de bondad de ajuste. :::</p>
+<p>Cuando utilizamos variables instrumentrales no le damos mucha importancia a la bondad de ajuste del modelo, ya que el objetivo es corregir la endogeneidad y no necesariamente mejorar el ajuste del modelo. Por lo tanto, no se reporta el R-cuadrado ni otras medidas de bondad de ajuste.</p>
+<p>:::</p>
+</section>
+<section id="contraste-de-hipotesis" class="level3">
+<h3 class="anchored" data-anchor-id="contraste-de-hipotesis">Contraste de hipotesis</h3>
+</section>
+<section id="instrumentos-débiles" class="level3">
+<h3 class="anchored" data-anchor-id="instrumentos-débiles">Instrumentos débiles</h3>
+<p>Cuales son los efectos?</p>
+<p>Por un lado</p>
+<p>Como contrasta la debilidad de los instrumentos?</p>
+<ol type="1">
+<li><p>Se estima el modelo por MCO y por MC2E</p></li>
+<li><p>Para la variable endógena k se construye el llamado estadistico de Goodness of fit (GFI): <span class="math display">\[
+GFI = \frac{R^2_{MCO}}{R^2_{MC2E}}
+\]</span></p></li>
+<li><p>Se construye el siguiente estadístico de contraste:</p></li>
+</ol>
+<p><span class="math display">\[
+F = \frac{(R^2_{MCO} - R^2_{MC2E})/(K-1)}{(1-R^2_{MCO})/(N-K)}
+\]</span></p>
+<ol start="4" type="1">
+<li>Si solo hay un instrumento, entonces <span class="math inline">\(K=2\)</span> y el estadístico de contraste es:</li>
+</ol>
+<p><span class="math display">\[
+F = \frac{(R^2_{MCO} - R^2_{MC2E})}{(1-R^2_{MCO})/(N-2)}
+\]</span></p>
+<ol start="5" type="1">
+<li>Si <span class="math inline">\(F &lt; 10\)</span>, entonces se dice que los instrumentos son débiles.</li>
+</ol>
+</section>
+<section id="ejemplo-contraste-de-instrumentos-débiles" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplo-contraste-de-instrumentos-débiles">Ejemplo: Contraste de instrumentos débiles</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#|message: false</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#|evaluate: false</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(wooldridge)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>wages <span class="ot">&lt;-</span> wage1</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>mod.OLS <span class="ot">&lt;-</span> <span class="fu">lm</span>(<span class="fu">log</span>(wage) <span class="sc">~</span> educ <span class="sc">+</span> exper <span class="sc">+</span> <span class="fu">I</span>(exper<span class="sc">^</span><span class="dv">2</span>), <span class="at">data =</span> wages)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Si el nivel de significancia del instrumento es significativo, entonces se puede concluir que el instrumento es relevante. En caso de saber si es exógeno, se puede utilizar el estadístico de Hausman. Si el estadístico es significativo, entonces se puede concluir que el instrumento es exógeno.</p>
+</section>
+<section id="comparación-de-modelos-logit-probit-y-mpl" class="level2">
+<h2 class="anchored" data-anchor-id="comparación-de-modelos-logit-probit-y-mpl">Comparación de modelos logit, probit y MPL</h2>
+<p>En el modelo probit <span class="math inline">\(g(0) = 0.4\)</span></p>
+<p>En el modelo logit <span class="math inline">\(g(0) = 0.5\)</span></p>
+<p>En el modelo de máxima verosimilitud (MPL) <span class="math inline">\(g(0) = 0.6\)</span></p>
+<p><em>Los coeficientes de estos modelos no tienen una interpretación directa como en el caso de la regresión lineal. En cambio, se interpretan como cambios en la probabilidad de que ocurra el evento de interés. Observando el signo de los coeficientes, se puede inferir si un aumento en la variable independiente aumenta o disminuye la probabilidad del evento.</em></p>
+<section id="ejemplos-practico" class="level3">
+<h3 class="anchored" data-anchor-id="ejemplos-practico">Ejemplos practico</h3>
+<section id="histograma" class="level4">
+<h4 class="anchored" data-anchor-id="histograma">Histograma</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#|message: false</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#|warning: false</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(AER)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: car</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: carData</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: lmtest</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: zoo</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'zoo'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: sandwich</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: survival</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">"Affairs"</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(Affairs<span class="sc">$</span>affairs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="variables-instrumentrales_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># transformacion</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>Affairs<span class="sc">$</span>y <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(Affairs<span class="sc">$</span>affairs <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="co"># Convertur a variable binaria numerica</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Promedio de casos con affairs: 0.249584.</p>
+</section>
+<section id="estimacion" class="level4">
+<h4 class="anchored" data-anchor-id="estimacion">Estimacion</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Modelo MPL</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>MPL <span class="ot">&lt;-</span> <span class="fu">lm</span>(y <span class="sc">~</span> age <span class="sc">+</span> yearsmarried <span class="sc">+</span> religiousness <span class="sc">+</span> occupation <span class="sc">+</span> rating, </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> Affairs)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>mod_logit <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> age <span class="sc">+</span> yearsmarried <span class="sc">+</span> religiousness <span class="sc">+</span> occupation <span class="sc">+</span> rating, </span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">data =</span> Affairs, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>))</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>mod_probit <span class="ot">&lt;-</span> <span class="fu">glm</span>(y <span class="sc">~</span> age <span class="sc">+</span> yearsmarried <span class="sc">+</span> religiousness <span class="sc">+</span> occupation <span class="sc">+</span> rating, </span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>                  <span class="at">data =</span> Affairs, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"probit"</span>))</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>stargazer<span class="sc">::</span><span class="fu">stargazer</span>(MPL, mod_logit, mod_probit, <span class="at">type =</span> <span class="st">"text"</span>, <span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+===============================================================
+                                Dependent variable:            
+                    -------------------------------------------
+                                         y                     
+                              OLS           logistic   probit  
+                              (1)              (2)       (3)   
+---------------------------------------------------------------
+age                        -0.007**         -0.040**  -0.022** 
+                            (0.003)          (0.018)   (0.010) 
+                                                               
+yearsmarried               0.018***         0.105***  0.060*** 
+                            (0.005)          (0.030)   (0.017) 
+                                                               
+religiousness              -0.054***        -0.323*** -0.184***
+                            (0.015)          (0.089)   (0.052) 
+                                                               
+occupation                   0.012            0.072     0.038  
+                            (0.009)          (0.057)   (0.033) 
+                                                               
+rating                     -0.088***        -0.468*** -0.273***
+                            (0.016)          (0.089)   (0.053) 
+                                                               
+Constant                   0.788***         1.749***  0.977*** 
+                            (0.106)          (0.628)   (0.365) 
+                                                               
+---------------------------------------------------------------
+Observations                  601              601       601   
+R2                           0.101                             
+Adjusted R2                  0.094                             
+Log Likelihood                              -306.850  -307.295 
+Akaike Inf. Crit.                            625.699   626.591 
+Residual Std. Error    0.412 (df = 595)                        
+F Statistic         13.408*** (df = 5; 595)                    
+===============================================================
+Note:                               *p&lt;0.1; **p&lt;0.05; ***p&lt;0.01</code></pre>
+</div>
+</div>
+<p>En estos modelos no es importante el supuesto de heterocedasticidad debido a que los errores no son normales, por lo que no se debe de aplicar la prueba de heterocedasticidad.</p>
+<p>Para comparar los coeficientes de los modelos, se puede utilizar la función <code>summary()</code> para obtener los valores de los coeficientes y sus errores estándar. Sin embargo, es importante recordar que los coeficientes de los modelos logit y probit no son directamente comparables con los de un modelo lineal, ya que representan cambios en la probabilidad de que ocurra el evento de interés.</p>
+<p>Calculo para comparar:</p>
+<p><span class="math display">\[
+\frac{e^{\hat{\beta}}}{1 + e^{\hat{\beta}}}
+\]</span></p>
+</section>
+</section>
+<section id="para-calcular-el-efecto-parcial" class="level3">
+<h3 class="anchored" data-anchor-id="para-calcular-el-efecto-parcial">Para calcular el efecto parcial</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(margins)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'margins' was built under R version 4.5.1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>marg_logit <span class="ot">&lt;-</span> <span class="fu">margins</span>(mod_probit)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>marg_probit <span class="ot">&lt;-</span> <span class="fu">margins</span>(mod_logit)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(marg_logit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        factor     AME     SE       z      p   lower   upper
+           age -0.0064 0.0029 -2.1544 0.0312 -0.0121 -0.0006
+    occupation  0.0108 0.0094  1.1451 0.2522 -0.0077  0.0293
+        rating -0.0787 0.0142 -5.5274 0.0000 -0.1067 -0.0508
+ religiousness -0.0530 0.0145 -3.6438 0.0003 -0.0815 -0.0245
+  yearsmarried  0.0173 0.0048  3.5884 0.0003  0.0078  0.0267</code></pre>
+</div>
+</div>
+</section>
 </section>
 
 </main>

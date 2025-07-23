@@ -154,3 +154,72 @@ mod.OLS <- lm(log(wage) ~ educ + exper + I(exper^2), data = wages)
 ```
 
 Si el nivel de significancia del instrumento es significativo, entonces se puede concluir que el instrumento es relevante. En caso de saber si es exógeno, se puede utilizar el estadístico de Hausman. Si el estadístico es significativo, entonces se puede concluir que el instrumento es exógeno.
+
+## Comparación de modelos logit, probit y MPL
+
+En el modelo probit $g(0) = 0.4$
+
+En el modelo logit $g(0) = 0.5$
+
+En el modelo de máxima verosimilitud (MPL) $g(0) = 0.6$
+
+*Los coeficientes de estos modelos no tienen una interpretación directa como en el caso de la regresión lineal. En cambio, se interpretan como cambios en la probabilidad de que ocurra el evento de interés. Observando el signo de los coeficientes, se puede inferir si un aumento en la variable independiente aumenta o disminuye la probabilidad del evento.*
+
+### Ejemplos practico
+
+#### Histograma
+
+```{r}
+#|message: false
+#|warning: false
+library(AER)
+
+data("Affairs")
+
+hist(Affairs$affairs)
+```
+
+```{r}
+# transformacion
+Affairs$y <- as.numeric(Affairs$affairs > 0) # Convertur a variable binaria numerica
+```
+
+Promedio de casos con affairs: `r mean(Affairs$y)`.
+
+#### Estimacion
+
+```{r}
+# Modelo MPL
+MPL <- lm(y ~ age + yearsmarried + religiousness + occupation + rating, 
+                 data = Affairs)
+
+
+mod_logit <- glm(y ~ age + yearsmarried + religiousness + occupation + rating, 
+                 data = Affairs, family = binomial(link = "logit"))
+
+mod_probit <- glm(y ~ age + yearsmarried + religiousness + occupation + rating, 
+                  data = Affairs, family = binomial(link = "probit"))
+
+stargazer::stargazer(MPL, mod_logit, mod_probit, type = "text", digits = 3)
+```
+
+En estos modelos no es importante el supuesto de heterocedasticidad debido a que los errores no son normales, por lo que no se debe de aplicar la prueba de heterocedasticidad.
+
+Para comparar los coeficientes de los modelos, se puede utilizar la función `summary()` para obtener los valores de los coeficientes y sus errores estándar. Sin embargo, es importante recordar que los coeficientes de los modelos logit y probit no son directamente comparables con los de un modelo lineal, ya que representan cambios en la probabilidad de que ocurra el evento de interés.
+
+Calculo para comparar:
+
+$$
+\frac{e^{\hat{\beta}}}{1 + e^{\hat{\beta}}}
+$$
+
+### Para calcular el efecto parcial
+
+```{r}
+library(margins)
+
+marg_logit <- margins(mod_probit)
+marg_probit <- margins(mod_logit)
+
+summary(marg_logit)
+```
