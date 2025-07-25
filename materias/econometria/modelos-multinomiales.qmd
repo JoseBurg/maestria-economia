@@ -1,0 +1,271 @@
+---
+title: "Modelos multinomiales"
+author: "jose-burgos"
+format: html
+editor: visual
+---
+
+## Tipo de modelos multinomiales
+
+1.  Modelos multinomiales de regresión logística o modelo logit
+
+2.  Modelos multinomiales de regresión probit
+
+3.  Modelos multinomiales de regresión de Poisson
+
+Considere un problema de tres alternativas, J = 3.
+
+Modelo logit multinomial:
+
+Para simplificar que solo hay una variable explicativa, la especificaci'on de logit multinomial parte de las probabilidades qdel individuo i de elegir la alternativa j, $P_{ij}$, donde $j = 1, 2, 3$que se define como:
+
+$$
+Pi1 = \frac{1}{1 + exp\left(\beta_{12} + \beta_{22} x_i\right) + exp\left(\beta_{13} + \beta_{23} x_i\right)}
+$$
+
+$$
+Pi2 = \frac{exp\left(\beta_{12} + \beta_{22} x_i\right)}{1 + exp\left(\beta_{12} + \beta_{22} x_i\right) + exp\left(\beta_{13} + \beta_{23} x_i\right)}
+$$
+
+$$
+Pi3 = \frac{exp\left(\beta_{13} + \beta_{23} x_i\right)}{1 + exp\left(\beta_{12} + \beta_{22} x_i\right) + exp\left(\beta_{13} + \beta_{23} x_i\right)}
+$$
+
+La estimación de este modelo se realiza por máxima verosimilitud, y se puede realizar con el paquete `mlogit` de R.
+
+Se asume que las elecciones son independientes a través de los individuos y que cada uno solo puede tomar una elección.
+
+::: callout-note
+Recuerde que la función de verosimilitud es la probabilidad conjunta de las elecciones de todos los individuos, y se maximiza para encontrar los parámetros que mejor explican las elecciones observadas. Ejemplo:
+:::
+
+#### Ejemplos de estimación de modelos multinomiales:
+
+```{r}
+#|message: false
+#|warning: false
+library(nnet)
+library(dplyr)
+
+iris |>
+  count(Species) |> 
+  kableExtra::kable("html", caption = "Conteo de especies")
+```
+
+probabilidad para la especie setosa:
+
+$$
+P_{setosa} = \frac{1}{1 + exp\left(\beta_{12} + \beta_{22} Sepal.length\right) + exp\left(\beta_{13} + \beta_{23} x_i\right)}  
+$$
+
+```{r}
+# Creando el modelo multinomial
+iris_transformado <- iris |>
+  mutate(Species = factor(Species))
+
+modelo_multinomial <- multinom(Species ~ Sepal.Length + Sepal.Width, data = iris_transformado)
+summary(modelo_multinomial)
+```
+
+**Interpretación de los resultados:**
+
+Tabla de coeficientes y error estandar del modelo multinomial:
+
+```{r}
+#|message: false
+#|warning: false
+
+summary(modelo_multinomial)
+```
+
+#### Efectos parciales promedio:
+
+```{r}
+library(mfx)
+efecto_parcial <- logitmfx(
+ Species ~ Sepal.Length + Sepal.Width, # Modelo multinomial
+ data = iris_transformado, # Datos transformados
+ atmean = TRUE # Calcula el efecto parcial promedio
+)
+
+```
+
+\*\* Resultados: \*\*
+
+Warning: glm.fit: algorithm did not convergeWarning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+Esto indica que no existe suficiente variabilidad en lo modelos.
+
+#### Vamos a tratar de cambiar la variable para que solo sea dos valores
+
+```{r}
+iris2 <- iris |>
+  filter(Species != "setosa") |>
+  mutate(Species = factor(Species))
+
+
+```
+
+```{r}
+modelo_multinomial2 <- multinom(Species ~ Sepal.Length + Sepal.Width, data = iris2)
+summary(modelo_multinomial2)
+```
+
+```{r}
+
+# Efectos parciales promedio 
+efecto_parcial2 <- logitmfx(
+  Species ~ Sepal.Length + Sepal.Width, # Modelo multinomial
+  data = iris2, # Datos transformados
+  atmean = TRUE # Calcula el efecto parcial promedio
+)
+efecto_parcial2
+```
+
+Interpretación de los resultados:
+
+Según los resultados de la estimación del modelo multinomial, los coeficientes indican cómo cambia la probabilidad de elegir una especie en función de las variables explicativas. Por ejemplo, un aumento en la longitud del sépalo (Sepal.Length) está asociado con un aumento en la probabilidad de elegir la especie "versicolor" en comparación con "virginica".
+
+Los efectos parciales promedio indican el cambio promedio en la probabilidad de elegir una especie cuando se incrementa una variable explicativa en una unidad, manteniendo las demás variables constantes. Por ejemplo, un aumento de 1 cm en la longitud del sépalo incrementa la probabilidad de elegir "versicolor" en un cierto porcentaje.
+
+# Gráfico de las probabilidades predichas
+
+```{r}
+library(ggplot2)
+# Predicciones de probabilidad
+  
+predicciones <- data.frame(
+  Sepal.Length = seq(min(iris2$Sepal.Length), max(iris2$Sepal.Length), length.out = 100),
+  Sepal.Width = mean(iris2$Sepal.Width)
+)
+predicciones$Species <- predict(modelo_multinomial2, newdata = predicciones, type = "prob")
+predicciones_long <- tidyr::pivot_longer(predicciones, cols = starts_with("Species"), names_to = "Species", values_to = "Probability")
+ggplot(predicciones_long, aes(x = Sepal.Length, y = Probability, color = Species)) +
+  geom_line() +
+  labs(title = "Probabilidades predichas por especie",
+       x = "Longitud del sépalo (cm)",
+       y = "Probabilidad") +
+  theme_minimal()
+```
+
+Explicación del gráfico:
+
+La probabilidad predicha de elegir cada especie en función de la longitud del sépalo se muestra en el gráfico. Cada línea representa una especie diferente, y la altura de la línea indica la probabilidad de elegir esa especie a medida que varía la longitud del sépalo. Por ejemplo, a medida que aumenta la longitud del sépalo, la probabilidad de elegir "versicolor" aumenta, mientras que la probabilidad de elegir "virginica" disminuye.
+
+### Ejemplo dos
+
+```{r}
+library(AER)
+library(mlogit)
+
+data("TravelMode", package = "AER")
+
+db <- mlogit.data(TravelMode, choice = "choice", 
+                  shape = "long",
+                  alt.levels = c("car", "bus", "train", "air"),
+                  id.var = "individual")
+
+clogit <- mlogit(choice ~ vcost + wait + travel | 1, data = db)
+summary(clogit)
+```
+
+```{r}
+# {
+#   Call:
+# mlogit(formula = choice ~ vcost + wait + travel | 1, data = db, 
+#     method = "nr")
+# 
+# Frequencies of alternatives:choice
+#     car     bus   train     air 
+# 0.27619 0.30000 0.14286 0.28095 
+# 
+# nr method
+# 5 iterations, 0h:0m:0s 
+# g'(-H)^-1g = 0.000192 
+# successive function values within tolerance limits 
+# 
+# Coefficients :
+#                      Estimate  Std. Error z-value  Pr(>|z|)    
+# (Intercept):bus   -0.78666667  0.60260733 -1.3054   0.19174    
+# (Intercept):train -1.43363372  0.68071345 -2.1061   0.03520 *  
+# (Intercept):air   -4.73985647  0.86753178 -5.4636 4.665e-08 ***
+# vcost             -0.01391160  0.00665133 -2.0916   0.03648 *  
+# wait              -0.09688675  0.01034202 -9.3683 < 2.2e-16 ***
+# travel            -0.00399468  0.00084915 -4.7043 2.547e-06 ***
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Log-Likelihood: -192.89
+# McFadden R^2:  0.32024 
+# Likelihood ratio test : chisq = 181.74 (p.value = < 2.22e-16)
+# }
+```
+
+### Interpretación de los resultados:
+
+Los resultados del modelo multinomial muestran los coeficientes estimados para cada alternativa en comparación con la alternativa de referencia (en este caso, "car"). Los coeficientes indican cómo cambian las probabilidades de elegir cada alternativa en función de las variables explicativas.
+
+Por ejemplo, el coeficiente negativo para "bus" indica que un aumento en el costo del viaje (vcost) reduce la probabilidad de elegir el autobús en comparación con el automóvil. De manera similar, un aumento en el tiempo de espera (wait) reduce la probabilidad de elegir cualquier alternativa. Para el caso de `train` y `air`, los coeficientes negativos indican que estas alternativas son menos probables de ser elegidas en comparación con el automóvil, especialmente cuando se consideran los costos y tiempos asociados.
+
+Efectos parciales:
+
+```{r}
+effects(clogit, covariate = "vcost")
+
+# # Resultados:
+#       car           bus         train          air
+# car   -0.002574799  0.0010659750  0.0003689820  0.001139842
+# bus    0.001065975 -0.0029887424  0.0004702117  0.001452556
+# train  0.000368982  0.0004702117 -0.0013419886  0.000502795
+# air    0.001139842  0.0014525557  0.0005027950 -0.003095192
+```
+
+Interpretación de los efectos parciales: Los efectos parciales muestran cómo cambia la probabilidad de elegir cada alternativa cuando se incrementa el costo del viaje (vcost) en una unidad. Por ejemplo, un aumento en el costo del viaje reduce la probabilidad de elegir "car" en 0.0026, mientras que aumenta la probabilidad de elegir "bus" en 0.0011. Esto indica que los cambios en los costos afectan las elecciones de transporte de manera diferente para cada alternativa.
+
+## Modelos de elección ordenada
+
+En algunos casos las alternativas a elegir están ordenadas. Por ejemplo:
+
+-   Encuesta de opinión en las cuales las respuesta pueden ser en total desacuerdo, desacuerdo, neutral, acuerdo o total acuerdo.
+
+-   Clasificación de productos en una escala de 1 a 5 estrellas.
+
+-   Clasificación de estudiantes en una escala de A a F.
+
+Modelos probit ordenado
+
+modelo:
+
+$$
+y^* = nivel de sastifación
+$$
+
+donde puede ser alto, medio o bajo.
+
+$$
+y^* = \beta_0 + \beta_1 inflación + \beta_2 tipo\_ \vivienda + \beta_3 niveldecontractidelpropietario + \epsilon
+$$
+
+#### Estimación del modelo probit ordenado:
+
+```{r}
+library(MASS)
+house <- MASS::housing
+
+
+house <- house |>
+  mutate(
+    Sat = ordered(Sat, 
+      levels = c("Low", "Medium", "High"))
+  )
+
+
+
+```
+
+<!-- Modelo censurado -->
+
+```{r}
+
+
+```
