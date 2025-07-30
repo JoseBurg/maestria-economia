@@ -1,0 +1,102 @@
+---
+title: "Determinantes de la asignación de inversiones en planes de pensión: evidencia de mujeres maduras en EE.UU."
+format: docx
+editor: visual
+---
+
+```{r}
+# Paquetes a utilizar:
+library(tidyverse)
+
+```
+
+Pregunta de investigación: ¿En qué medida los factores sociodemográficos y financieros explican la proporción invertida en acciones dentro de los planes de pensión?
+
+Variable dependiente:
+
+pctstck: Porcentaje invertido en acciones dentro del plan de pensión
+
+Variables explicativas:
+
+educ: Nivel educativo alcanzado
+
+wealth89: Riqueza neta en 1989
+
+age: Edad en años
+
+married: Valor 1 si está casada
+
+irain89: Valor 1 si tenía una cuenta IRA en 1989
+
+Base de datos utilizada: pension
+
+```{r}
+pension <- readxl::read_excel("pension.xlsx")
+```
+
+### Analisis exploratorio
+
+## Estimación del modelo de regresión lineal:
+
+```{r}
+#Variable dependiente:
+summary(pension$pctstck)
+modelo <- lm(pctstck ~ educ + wealth89 + age + married + irain89, data = pension)
+
+stargazer::stargazer(modelo, type = "text", title = "Modelo de regresión lineal para pctstck")
+```
+
+#### Comprobando la normalidad de los residuos:
+
+```{r}
+# Histograma de los residuos
+hist(residuals(modelo), main = "Histograma de los residuos", xlab = "Residuos", breaks = 20)
+# QQ-plot de los residuos
+qqnorm(residuals(modelo))
+```
+
+### Análisis de heterocedasticidad
+
+Planteamiento de la hipótesis nula: La varianza de los errores es constante (homocedasticidad).
+
+$$
+H_0: Var(u_i) = σ^2 \quad \text{(homocedasticidad)}
+$$
+
+$$
+H_a: Var(u_i) \neq σ^2 \quad \text{(heterocedasticidad)}
+$$
+
+```{r}
+# Prueba de Breusch-Pagan
+library(lmtest)
+library(sandwich)
+bptest(modelo)
+# Prueba de White
+white_test <- bptest(modelo, ~ fitted(modelo) + I(fitted(modelo)^2))
+white_test
+```
+
+#### Prueba de Breusch-Pagan
+
+El p-value es de 0.1711 lo que indica que no se rechaza la hipótesis nula de homocedasticidad. Concluyendo que al nivel de significancia del 5% no hay evidencia de heterocedasticidad en el modelo.
+
+#### Prueba de White
+
+En este test el p-value es de 0.1257 lo que también indica que no se rechaza la hipótesis nula de homocedasticidad. Por lo tanto, al igual que en la prueba de Breusch-Pagan, no hay evidencia de heterocedasticidad en el modelo.
+
+### Análisis de multicolinealidad
+
+Supuesto:
+
+```{r}
+# Matriz de correlación
+cor_matrix <- cor(pension[, c("pctstck", "educ", "wealth89", "age", "married", "irain89")], use = "complete.obs")
+# Visualización de la matriz de correlación
+library(corrplot)
+corrplot(cor_matrix, method = "circle", type = "upper", tl.col = "black", tl.srt = 45)
+# VIF para detectar multicolinealidad
+library(car)
+vif_values <- vif(modelo)
+vif_values
+```
