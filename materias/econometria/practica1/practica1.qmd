@@ -517,13 +517,162 @@ summary(modelo132)$coefficients |>
 
 *El coeficiente de `educ` es 0.075, lo que indica que un año adicional de educación está asociado con un aumento del 7.5 % en el salario, manteniendo constantes la experiencia y la antigüedad. El coeficiente de `exper` es 0.015, lo que sugiere que un año adicional de experiencia laboral está asociado con un aumento del 1.5% en el salario, manteniendo constantes la educación y la antigüedad. Finalmente, el coeficiente de `tenure` es 0.013, lo que indica que un año adicional de antigüedad en la empresa está asociado con un aumento del 0.13% en el salario, manteniendo constantes la educación y la experiencia.*
 
-14) **Utilice los datos hprice1 para estimar el siguiente modelo:**
+14) **Utilice los datos *hprice1* para estimar el siguiente modelo:**
 
 $$price=\beta_0\ +\ \beta_1sqrft\ +\ \beta_2bdrms\ +\ u$$
 
 donde $price$ es el precio de las casas en miles de dólares.
 
-```{r}
+```{r, fig.align="center"}
+#|warning = FALSE
+#|echo = FALSE
+#|message = FALSE
 # Vamos a gráficar los residuos del último modelo
+hprice1 <- wooldridge::hprice1
 
+modelo14 <- lm(price ~ sqrft + bdrms, data = hprice1)
+stargazer::stargazer(
+  modelo14,
+  type = "text",
+  title = "Resultados del modelo de regresión de price sobre sqrft y bdrms",
+  dep.var.labels = "Precio de la casa (miles de dólares)",
+  covariate.labels = c("Superficie (sqrft)", "Número de habitaciones (bdrms)"),
+  omit.stat = c("f", "ser"),
+  digits = 3
+)
+```
+
+**Modelo estimado:** $$price = -19.315 + 0.128\ sqrft + 15.198\ bdrms$$ ii) Cuál es el incremento en el precio estimado para una casa con una habitación más, manteniendo constante la superficie en pies cuadrados (`sqrft`)?
+
+*El coeficiente de números de habitaciones (bdrms) es 15.198, lo que significa que, manteniendo constante la superficie en pies cuadrados (`sqrft`), el incremento en el precio estimado para una casa con una habitación más es de aproximadamente 15,198 dólares.*
+
+iii) Cuál es el incremento en el precio estimado para una casa con una habitación adicional de 140 pies cuadrados? Compare con su respuesta del inciso ii).
+
+*Para calcular el incremento en el precio estimado para una casa con una habitación adicional de 140 pies cuadrados, multiplicamos el coeficiente de `sqrft` por 140:*
+
+$$
+\text{Incremento en el precio} = 0.128 \times 140 = 17.92 \text{ miles de dólares}
+$$
+
+*El incremento en el precio estimado para una casa con una habitación adicional de 140 pies cuadrados es de aproximadamente 17,920 dólares. Comparando con la respuesta del inciso ii), donde el incremento por una habitación adicional era de 15,198 dólares, podemos ver que el efecto del tamaño de la habitación (140 pies cuadrados) es mayor que el efecto de simplemente agregar una habitación más sin considerar su tamaño.*
+
+iv) Qué porcentaje de la variación en el precio se explica por la extensión en pies cuadrados y el número de habitaciones?
+
+*El* $R^2 = 0.632$, lo que sugiere que el 63.2% de la variación en el precio de las casas es explicado por la superficie en pies cuadrados (`sqrft`) y el número de habitaciones (`bdrms`). Esto indica que el modelo tiene un ajuste razonable, aunque hay otros factores que también pueden influir en el precio de las casas que no están incluidos en este modelo.
+
+v)  La primera casa de la muestra tienen sqrft = 2,348 y bdrms = 4. Determine el precio de venta estimado para esta con la línea de regresión de MCO.
+
+$$
+\text{Precio estimado} = -19.315 + 0.128 \times 2348 + 15.198 \times 4
+$$
+
+*El precio estimado es igual a `r -19.315 + 0.128*2348 + 15.198*4`.*
+
+vi) El precio de venta de la primera casa fue de \$300,000 (así que price = 300). Determine el residual para esta casa. Sugiere esto que el comprador pagó de más o de menos por la casa?
+
+*El residual es igual al precio de venta observado menos el precio estimado de la primera casa.*
+
+$$
+residual = 300 - 342 = -42
+$$ *El comprador pago de menos, 42 mil dolares menos que lo estimado.*
+
+vii) Estime el modelo con el logaritmo de `price`. Cómo cambia la interpretación de los parámetros del modelo. En especial, interprete correctamente la constante de esta especificación.
+
+```{r}
+modelo141 <- lm(log(price) ~ sqrft + bdrms, data = hprice1)
+
+stargazer::stargazer(
+  modelo141, type = "text"
+)
+```
+
+*Los parámetros del modelo se van a interpretar como una semielasticidades. La constante se interpreta como el precio en logaritmo para las casas que tienen cero metros en superficie y cero número de habitaciones, es importante resaltar que esta interpretación no tiene sentido económico, además de no ser realista.*
+
+15) **La base de datos `k401Ksubs` contiene información acerca de la riqueza financiera neta (`nettfa`), edad de la persona entrevistada (`age`), ingreso familiar (`inc`), tamaño de la familia (`fsize`), y participación en los planes de pensiones. Las variables riqueza e ingreso están dadas en miles de dólares. Para esta ecuación, emplee solo los datos de hogares de solo una persona (`fsize = 1`).**
+
+```{r}
+datos15 <- wooldridge::k401ksubs |> 
+  filter(fsize == 1)
+```
+
+i)  ¿Cuántos hogares de una sola persona hay en la base de datos?
+
+```{r}
+datos15 |> 
+  count(fsize, name = "Cantidad Hogares") |> 
+  kableExtra::kable()
+```
+
+ii) Use MCO para estimar el modelo:
+
+$$
+nettfa = \beta_0\ \beta_1inc\ + \beta_2age\ +\ u
+$$
+
+Y de los resultados empleando el formato habitual. Compruebe que solo utiliza los hogares de una sola persona que hay en la muestra. Interprete los coeficientes de pendiente. ¿Hay algo que sorprenda en las estimaciones de pendiente?
+
+```{r}
+modelo15 <- lm(nettfa ~ inc + age, data = datos15)
+
+stargazer::stargazer(
+  modelo15, 
+  type = "text"
+)
+```
+
+*El modelo estimado sobre hogares unipersonales muestra que tanto el ingreso como la edad tienen efectos positivos y significativos sobre el patrimonio neto (`nettfa`). Un aumento de una unidad en el ingreso se asocia con un incremento promedio de 0.799 en `nettfa`, mientras que un año adicional de edad incrementa el patrimonio en 0.843, manteniendo constante el ingreso. Aunque el* $R^2 = 0.119$ indica una capacidad explicativa moderada, ambos efectos son relevantes. Resulta llamativo que los efectos marginales de ingreso y edad sean de magnitudes similares, lo cual sugiere una contribución comparable de ambas variables al nivel de riqueza neta entre hogares de una sola persona.
+
+iii) ¿Tiene algún significado interesante el intercepto en la regresión del inciso ii)? Explique.
+
+El intercepto tiene un valor negativo de -43.040, lo que sugerie que las personas con un ingreso de cero y una edad de cero tendrían un patrimonio neto negativo. Sin embargo, esta interpretación carece de sentido práctico, ya que no es realista que una persona tenga cero años de edad o que no tenga ningún ingreso. En este contexto, el intercepto no tiene un significado económico relevante y simplemente refleja la extrapolación del modelo a valores fuera del rango observado en los datos.
+
+iv) Encuentre el valor-p de la prueba $H_0 : \beta_2 = 1$ contra $H_1 : \beta_2 < 1$. ¿Rechaza usted H0 al nivel de significancia de 1%?
+
+```{r}
+car::linearHypothesis(
+  modelo15, 
+  c("age=1")  # Hipotesis nula
+)
+```
+
+*Dado que el valor p es 0.08743, no se rechaza la hipótesis nula al nivel de significancia del 1 %. Esto indica que no existe suficiente evidencia estadística para afirmar que* $\beta_2$ es distinto de 1 con un 99 % de confianza.
+
+v)  Si realiza una regresión simple de nettfa sobre inc, ¿es el coeficiente estimado de `inc` muy diferente al estimado en el inciso ii)? Justifique su respuesta.
+
+```{r}
+modelo15_1 <- lm(nettfa ~ inc, data = datos15)
+
+stargazer::stargazer(
+  modelo15_1, 
+  type = "text"
+)
+```
+
+*El coeficiente estimado de `inc` en la regresión simple es 0.799, que es el mismo que el estimado en el inciso ii) cuando se incluye `age`. Esto sugiere que el efecto del ingreso sobre el patrimonio neto (`nettfa`) no cambia significativamente al controlar por la edad. En este caso, la inclusión de `age` no afecta la estimación del coeficiente de `inc`, lo que indica que ambos factores tienen un efecto independiente sobre el patrimonio neto en los hogares unipersonales.*
+
+```{r}
+modelo15_1 <- lm(nettfa ~ inc, data = datos15)
+
+stargazer::stargazer(
+  modelo15_1, 
+  type = "text"
+)
+```
+
+*En el inciso ii) el coeficiente estimado de inc fue 0.799, mientras que en la regresión simple (sin controlar por age) es 0.821. Aunque existe una ligera diferencia numérica, ambos coeficientes son positivos, estadísticamente significativos y de magnitud muy similar.*
+
+vi) Considere el modelo:
+
+$$
+nettfa = \beta_0 + \beta_1inc + \beta_2age + \beta_3age^2 + u
+$$
+
+¿Cuál es la interpretación literal de $\beta_2$? ¿Tiene mucho interés en si misma?
+
+*En el modelo con término cuadrático para la edad, el coeficiente* $\beta_2$ *representa el efecto de la edad sobre el patrimonio neto cuando `age = 0`, lo cual no tiene un significado práctico directo. El verdadero interés está en el efecto marginal total* $\frac{\partial\ \text{nettfa}}{\partial\ \text{age}} = \beta_2 + 2\beta_3 \cdot \text{age}$*, que varía según la edad. Por tanto,* $\beta_2$ *por sí sola tiene un interés limitado y debe interpretarse junto a* $\beta_3$*.*
+
+vii) Estime el modelo anterior y de los resultados de manera habitual. ¿Le preocupa que el coeficiente de age (`edad`) sea negativo? Explique.
+
+```{r}
+modelo15_2 <- lm()
 ```

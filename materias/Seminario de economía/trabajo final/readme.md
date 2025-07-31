@@ -16,11 +16,11 @@ Título: Determinantes de la asignación de inversiones en planes de pensión: e
 
 Variable dependiente:
 
--    pctstck: Porcentaje invertido en acciones dentro del plan de pensión
+-   pctstck: Porcentaje invertido en acciones dentro del plan de pensión
 
 Variables explicativas:
 
--    educ: Nivel educativo alcanzado
+-   educ: Nivel educativo alcanzado
 
 -   wealth89: Riqueza neta en 1989
 
