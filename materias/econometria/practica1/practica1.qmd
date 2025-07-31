@@ -674,5 +674,7 @@ $$
 vii) Estime el modelo anterior y de los resultados de manera habitual. ¿Le preocupa que el coeficiente de age (`edad`) sea negativo? Explique.
 
 ```{r}
-modelo15_2 <- lm()
+modelo15_2 <- lm(nettfa ~ inc + age + I(age^2), data = datos15)
+
+stargazer::stargazer(modelo15_2, type = "text")
 ```
