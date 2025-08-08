@@ -492,7 +492,6 @@ Hipotesis alternativa: $$H_a: \beta_2 \neq \beta_3$$
 iv) Al nivel de significancia de 5% pruebe la hipótesis nula del inciso iii) contra la alternativa de dos colas. ¿Qué puede concluir?
 
 ```{r}
-#|echo= true
 #|fig.align= "center"
 car::linearHypothesis(modelo13, c("exper = tenure"))
 ```
@@ -524,9 +523,6 @@ $$price=\beta_0\ +\ \beta_1sqrft\ +\ \beta_2bdrms\ +\ u$$
 donde $price$ es el precio de las casas en miles de dólares.
 
 ```{r, fig.align="center"}
-#|warning = FALSE
-#|echo = FALSE
-#|message = FALSE
 # Vamos a gráficar los residuos del último modelo
 hprice1 <- wooldridge::hprice1
 
@@ -678,3 +674,7 @@ modelo15_2 <- lm(nettfa ~ inc + age + I(age^2), data = datos15)
 
 stargazer::stargazer(modelo15_2, type = "text")
 ```
+
+Aunque el coeficiente de `age` es negativo (−1.322), no es motivo de preocupación debido a que el modelo incluye un término cuadrático (`age²`). Esto implica que la relación entre edad y patrimonio neto no es lineal, sino que cambia según la edad. El efecto marginal se vuelve positivo a partir de los 25 años aproximadamente, lo que es coherente con la idea de que las personas acumulan más riqueza conforme envejecen. Por tanto, el signo negativo de `age` no debe interpretarse de forma aislada, sino junto al coeficiente positivo de `age²`.
+
+viii) Dado que las personas más jóvenes de la muestra tienen 25 años, es razonable pensar que, dado un determinado nivel de ingreso, la menor cantidad promedio de activo financiero neto es a la edad de 25 años. Recuerde que el efecto parcial de age sobre `nettfa` es $\beta_2+2\beta_3age$, de manera que este efecto parcial a la edad de 25 años es $\beta_2+2\beta_3(25) = \beta_2+50\beta_3$; llámese a esto $\theta_2$. Determine $\theta_2$ y obtenga el `valor–p` de dos colas para probar $H_o:\theta_2=0$. Debe concluir que $\theta_2$ es pequeño y estadísticamente muy poco significativo. \[Sugerencia: una manera de hacer esto es estimar el modelo $nettfa = α_0 + β_1inc + θ_2age + β_3(age − 25)^2 + u$,donde el intercepto $\theta_0$ es diferente a $β_0$\].
