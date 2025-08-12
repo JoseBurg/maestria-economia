@@ -1,40 +1,77 @@
 ---
 title: "Determinantes de la asignación de inversiones en planes de pensión: evidencia de mujeres maduras en EE.UU."
-format: docx
+format: pdf
 editor: visual
 ---
 
 ```{r}
 # Paquetes a utilizar:
+#| echo: false
+#| warning: false
+#| message: false
 library(tidyverse)
 
 ```
+
+<!-- Información del estudio -->
 
 Pregunta de investigación: ¿En qué medida los factores sociodemográficos y financieros explican la proporción invertida en acciones dentro de los planes de pensión?
 
 Variable dependiente:
 
-pctstck: Porcentaje invertido en acciones dentro del plan de pensión
+**pctstck**: Porcentaje invertido en acciones dentro del plan de pensión
 
 Variables explicativas:
 
-educ: Nivel educativo alcanzado
+**educ**: Nivel educativo alcanzado
 
-wealth89: Riqueza neta en 1989
+*wealth89*: Riqueza neta en 1989
 
-age: Edad en años
+**age**: Edad en años
 
-married: Valor 1 si está casada
+**married**: Valor 1 si está casada
 
-irain89: Valor 1 si tenía una cuenta IRA en 1989
+**irain89**: Valor 1 si tenía una cuenta IRA en 1989
 
 Base de datos utilizada: pension
+
+<!-- Lineamientps del análisis: -->
+
+Introducción • Presenta el problema o fenómeno económico a estudiar. • Justifica su relevancia empírica o teórica. • Formula claramente la pregunta de investigación. • Expón de forma general tu hipótesis o lo que esperas encontrar. 2. Revisión de literatura • Resume brevemente estudios previos relevantes. • Enfócate en trabajos que hayan usado datos o modelos similares. • Identifica brechas que tu trabajo busca explorar. 1 • Usa citas correctamente en estilo APA. 3. Datos y metodología • Describe las fuentes de datos utilizadas y el período temporal. • Define cada variable (dependiente e independientes). • Presenta el modelo de regresión lineal múltiple propuesto (ecuación con notación formal). • Justifica la selección de variables. 4. Estimaciones y resultados • Presenta la tabla con resultados del modelo (coeficientes, errores estándar, R²). • Interpreta los coeficientes principales en términos económicos. • Comenta sobre la significancia estadística y sentido económico de los resultados. • No incluyas aquí especulaciones o recomendaciones (eso va en la conclusión). 5. Conclusiones • Resume los hallazgos principales y su coherencia con la literatura revisada. • Expón posibles implicaciones para políticas públicas o futuras investigaciones. • Señala limitaciones del análisis (si aplica).
+
+<!-- Fin de lineamientos -->
 
 ```{r}
 pension <- readxl::read_excel("pension.xlsx")
 ```
 
-### Analisis exploratorio
+### Descripción de las variables
+
+La variable dependiente es una variable continua que representa el porcentaje de acciones en el plan de pensión. Esta variable es una variable limitada entre 0 y 100, ya que no se puede invertir más del 100% en acciones. Esta variable es truncada o limitada y no tiene una distribución normal, lo que puede afectar la validez de los resultados del modelo de regresión lineal.
+
+Los modelos tobit son adecuados para este tipo de variables, ya que permiten modelar la relación entre la variable dependiente y las variables independientes, teniendo en cuenta el truncamiento de la variable dependiente.
+
+Las variables explicativas son: - **educ**: Variable categórica que representa el nivel educativo alcanzado por la persona. Esta variable puede tener un efecto significativo en la proporción de acciones en el plan de pensión, ya que las personas con mayor educación tienden a tener una mayor comprensión de los mercados financieros y, por lo tanto, pueden estar más dispuestas a invertir en acciones.
+
+## Datos y metodología
+
+Los datos utilizados en este estudio provienen de la base de datos pension, que contiene información sobre mujeres maduras en Estados Unidos. La base de datos incluye variables sociodemográficas y financieras, así como la proporción de acciones en el plan de pensión.
+
+La variables de intereses son las siguientes:
+
+-   **pctstck**: Porcentaje invertido en acciones dentro del plan de pensión (variable dependiente).
+
+-   **educ**: Nivel educativo alcanzado (variable independiente).
+
+-   **wealth89**: Riqueza neta en 1989 (variable independiente).
+
+-   **age**: Edad en años (variable independiente).
+
+-   **married**: Valor 1 si está casada (variable independiente).
+
+-   **irain89**: Valor 1 si tenía una cuenta IRA en 1989 (variable independiente).
+
+Deb
 
 ## Estimación del modelo de regresión lineal:
 
@@ -99,4 +136,13 @@ corrplot(cor_matrix, method = "circle", type = "upper", tl.col = "black", tl.srt
 library(car)
 vif_values <- vif(modelo)
 vif_values
+```
+
+## Anexos:
+
+Gráficos de las variables y validez de los resultados
+
+```{r}
+# plot(pension$ed)
+
 ```
