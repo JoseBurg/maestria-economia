@@ -10,6 +10,7 @@ pension <- readxl::read_excel(
   # Vamos a filtrar que las variables no sean negativas
   filter(wealth89 >= 0, pctstck >= 0)
 
+
 # La variable pyears es el número de años que la persona ha estado en el trabajo
 
 # Sección de gráficos -----------------------------------------------------
@@ -18,6 +19,37 @@ pension <- readxl::read_excel(
 ggplot(pension, aes(x = pctstck)) +
   geom_histogram(bins = 30, fill = "skyblue", color = "white") +
   labs(title = "Distribución del porcentaje invertido en acciones")
+# Riqueza según distribución del porcentaje invertido en acciones
+library(viridis)
+pension |>
+  mutate(
+    pctstck = factor(
+      pctstck,
+      levels = c(0, 50, 100),
+      labels = c("0%", "50%", "100%")
+    )
+  ) |>
+  ggplot(aes(x = pctstck, y = wealth89, fill = pctstck)) +
+  # Ecluir los valores atípicos
+  geom_boxplot(outlier.shape = NA) +
+  scale_fill_viridis(discrete = TRUE, alpha = 0.6, option = "B") +
+  geom_jitter(
+    color = "#00a6fb",
+    alpha = 0.3,
+    shape = 16,
+    position = position_jitter(width = 0.2, height = 0)
+  ) +
+  labs(
+    x = "Porcentaje invertido en acciones",
+    y = "Riqueza neta en 1989"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    # Colocar el text font de times new roman
+    text = element_text(family = "Times New Roman")
+  )
+
 
 # Educación según según el porcentaje invertido en acciones
 ggplot(pension, aes(x = educ, y = age)) +
@@ -126,3 +158,24 @@ summary(mlogit_model)
 pred <- predict(modelo_mult, type = "class")
 table(Predicho = pred, Real = pension$pctstck_fac)
 mean(pred == pension$pctstck_fac)
+
+# Estadisticas descriptivas sobre las variables:
+pension |>
+  summarise(
+    across(
+      c(pctstck, educ, wealth89, age),
+      list(
+        media = mean,
+        mediana = median,
+        sd = sd,
+        min = min,
+        max = max
+      ),
+      na.rm = TRUE
+    )
+  ) |> # Ajustar una tabla de resumen con su nombre correcto, pasar de wide a long
+  tidyr::pivot_longer(
+    cols = everything(),
+    names_to = c("variable", ".value"),
+    names_sep = "_"
+  ) # colocar nombre correctamente
