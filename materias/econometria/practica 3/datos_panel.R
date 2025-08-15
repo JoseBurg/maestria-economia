@@ -104,12 +104,33 @@ stargazer(
 
 
 # Ejercicio 3: Productividad agricola -------------------------------------
-# Convertir los datos a formato de panel
-fertil <- read.csv("./materias/econometria/practica 3/fertil3.xls")
-# Read
+## Ejercicio 3: Productividad agrícola
 
-fertil <- pdata.frame(
-  fertil3, # ID     t
-  index = "year"
-)
+# Variable dependiente: `crop output`
+# 
+# Variables explicativas: `fertilizer`, `labor`, `land`
 
+### (a) Estime un modelo de efectos fijos para evaluar el impacto del fertilizante.
+
+
+fertil <- read.csv("./fertilizer.csv")
+# Convertir a datos de panel, controlando por country y year
+fertil <- pdata.frame(fertil, index = c("country", "year"))
+modelo3 <- plm(crop_output ~ fertilizer + labor + land,
+               data = fertil, model = "within")
+stargazer(modelo3, type = "text")
+
+### (b) Incluya el término cuadrático de fertilizer y comente si hay rendimientos decrecientes.
+
+modelo31 <- plm(crop_output ~ fertilizer + I(fertilizer^2) + labor + land,
+                data = fertil, model = "within")
+stargazer(modelo31, type = "text")
+
+### (c) Estime un modelo con efectos aleatorios y compare con el modelo anterior.
+
+modelo32 <- plm(crop_output ~ fertilizer + I(fertilizer^2) + labor + land,
+                data = fertil, model = "random")
+stargazer(modelo31, modelo32, type = "text",
+          title = "Comparación de Modelos de Efectos Fijos y Aleatorios")
+
+phtest(modelo31, modelo32)
