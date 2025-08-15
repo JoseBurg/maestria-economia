@@ -1,0 +1,150 @@
+---
+title: "Análisis Econométrico con Datos de Panel"
+subtitle: "Practica 3"
+author: "José Burgos 25-0140"
+date: "2025-08-15"
+output:
+    pdf_document:
+    highlight: monochrome
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Preguntas conceptuales
+
+## 1. ¿Qué se entiende por datos de panel y qué ventajas ofrece respecto a datos de corte transversal?
+
+Los **datos de panel** observan un conjunto de individuos a lo largo de múltiples periodos de tiempo, combinando dimensiones de corte transversal y series de tiempo. Pueden ser balanceados o no balanceados.
+
+**Ventajas principales:** Proporcionan información sobre el comportamiento individual a través del tiempo. Permiten controlar la heterogeneidad no observada entre individuos que podría estar correlacionada con los regresores (e.g., modelos de efectos fijos). Ofrecen un mayor número de observaciones $(N\ *\ T)$, lo que puede mejorar la precisión de las estimaciones.
+
+## 2. Explique la diferencia entre los modelos de efectos fijos y efectos aleatorios. ¿Qué implicaciones tiene sobre la correlación entre efectos individuales no observados y las covariables?
+
+La diferencia clave radica en la correlación entre los efectos individuales no observados ($\alpha_i$) y los regresores (covariables): Efectos Fijos (FE): Permite que $\alpha_i$ esté correlacionado con los regresores. Si existe esta correlación, el estimador `FE` es consistente. Efectos Aleatorios (EA): Asume que $\alpha_i$ es independiente de los regresores. Si esta independencia no se cumple, el estimador `EA` es inconsistente. Si se cumple, `EA` es más eficiente que `FE`.
+
+## 3. ¿En qué consiste la prueba de Hausman y qué criterio se utiliza para decidir entre efectos fijos y aleatorios?
+
+La **prueba de Hausman** es un contraste estadístico que evalúa si existe una diferencia significativa entre los estimadores de efectos fijos y efectos aleatorios. Solo se aplica a regresores que varían en el tiempo.
+
+**Criterio de decisión:** Si el contraste es no significativo (p-valor alto): No se rechaza la hipótesis nula, lo que sugiere que no hay correlación entre los efectos individuales y los regresores. Se elige el modelo de Efectos Aleatorios (EA) por ser más eficiente. Si el contraste es significativo (p-valor bajo): Se rechaza la hipótesis nula, lo que indica *correlación* entre los efectos individuales y los regresores. Se elige el modelo de Efectos Fijos (FE) por ser consistente en esta situación.
+
+## 4. ¿Qué es el “within transformation”? ¿Cómo permite eliminar el efecto no observado en el modelo de efectos fijos?
+
+El **"within transformation"** es la técnica utilizada por el estimador de efectos fijos que emplea solo la variación dentro de cada individuo a lo largo del tiempo. Consiste en descontar la media temporal de cada variable para cada individuo.
+
+Esta transformación elimina el efecto individual no observado ($\alpha_i$) porque, al ser constante para cada individuo en el tiempo, se cancela al restarle su propia media temporal $(\alpha_i-\alpha_i = 0)$. Esto permite estimar los coeficientes sin sesgo debido a $\alpha_i$. Las variables que no varían en el tiempo son eliminadas.
+
+## 5. ¿Qué problemas pueden surgir si hay autocorrelación o heterocedasticidad en paneles no balanceados? ¿Cómo pueden corregirse?
+
+-   **Problemas:** Tanto la autocorrelación (correlación serial de errores) como la heterocedasticidad (varianza no constante de los errores) hacen que los errores estándar estimados sean incorrectos. Esto lleva a inferencias estadísticas (pruebas de hipótesis, intervalos de confianza) inválidas, aunque los estimadores de los coeficientes puedan ser consistentes.
+
+-   **Corrección:** Suelen corregirse usar errores estándar robustos adecuados para paneles no balanceados, como: Robustos a heterocedasticidad: `vcovHC()` con tipo `arellano` o `HC1`. Robustos a autocorrelación y heterocedasticidad: errores estándar agrupados (`clustered`) por individuo o por dos vías (individuo y tiempo).
+
+# Parte II: Ejercicios aplicados con Datos de Wooldridge
+
+## Ejercicio 1: Efectos fijos y aleatorios (base wagepan.csv)
+
+Variable dependiente: lwage (log del salario horario)
+
+Variables explicativas: educ, exper, black, married, union
+
+```{r}
+library(plm)
+library(stargazer)
+library(wooldridge) #                     #ID    T
+wagepan <- pdata.frame(wagepan, index = c("nr", "year"))
+```
+
+\newpage
+
+### (a) Estime un modelo de efectos fijos.
+
+```{r}
+modelo1 <- plm(lwage ~ educ + exper + black + married + union,
+  data = wagepan, model= "between")
+
+stargazer(modelo1, type = "text")
+```
+
+\newpage
+
+### (b) Estime un modelo de efectos aleatorios.
+
+```{r}
+# Modelo de efectos aleatorios -----
+modelo12 <- plm(lwage ~ educ + exper + black + married + union,
+  data = wagepan, model = "random")
+
+stargazer(modelo12, type = "text")
+```
+
+\newpage
+
+### (c) Realice la prueba de Hausman y determine qu´e modelo es m´as apropiado.
+
+```{r}
+## Test de Hausman:
+phtest(modelo1, modelo12)
+```
+
+La prueba de Hausman contrasta la hipótesis nula de que el estimador de efectos aleatorios (EA) es consistente y eficiente contra la alternativa de que solo el estimador de efectos fijos (EF) es consistente. En tu caso, el estadístico de Hausman para comparar EF y EA es: Con modelo "between": $\chi^2(5) = 21.801$, `p = 0.000571` Debido a que el `p \< 0.01`, se rechaza la hipótesis nula. Esto indica que el modelo de efectos aleatorios es inconsistente y, por tanto, el modelo de efectos fijos es el más apropiado para este conjunto de datos.
+
+\newpage
+
+### (d) Interprete el efecto de pertenecer a un sindicato (union).
+
+El coeficiente de union es 0.259, lo que indica que, en promedio, los trabajadores que pertenecen a un sindicato (generando un efecto fijo) ganan un 25.9% más que aquellos que no pertenecen a un sindicato, manteniendo constantes las demás variables del modelo. Este efecto es estadísticamente significativo al nivel del 1% (`p \< 0.01`), lo que sugiere que la pertenencia a un sindicato tiene un impacto positivo y significativo en los salarios de los trabajadores.
+
+## Ejercicio 2: Cambios en el crimen
+
+-   Variable dependiente: crmrte (tasa de criminalidad)
+
+-   Variables explicativas: prbarr (probabilidad de arresto), prbconv (probabilidad de condena), avgsen (sentencia promedio), polpc (policía por habitante), density (densidad poblacional), income (ingreso per cápita).
+
+\newpage
+
+### (a) Estime un modelo de efectos fijos para evaluar el impacto de la severidad del castigo sobre la criminalidad.
+
+```{r}
+crimen <- pdata.frame(crime4, index = c("county", "year")
+)
+
+modelo21 <- plm(crmrte ~ prbarr + prbconv + avgsen + polpc + density,
+  data = crimen, model= "between")
+
+stargazer(modelo21, type = "text", 
+  title = "Modelo de Efectos Fijos para el Crimen")
+```
+
+### (b) ¿Cómo cambia el coeficiente de prbarr si se omite polpc? Interprete.
+
+```{r}
+modelo22 <- plm(crmrte ~ prbarr + prbconv + avgsen + density,
+  data = crimen, model= "between")
+
+stargazer(modelo21, modelo22,
+  type = "text", title = "Comparación de Modelos con y sin polpc")
+```
+
+Al omitir polpc, el coeficiente de prbarr disminuye en magnitud, lo que indica que parte del efecto de la probabilidad de arresto sobre la criminalidad estaba siendo capturado por la variable polpc. Esto sugiere que la presencia de más policías por habitante puede estar relacionada con una menor tasa de criminalidad, y al no incluirla, se subestima el efecto de prbarr.
+
+### (c) Incluya efectos temporales fijos (años) y analice si la tendencia de criminalidad cambia.
+
+```{r}
+modelo23 <- plm(
+  crmrte ~ prbarr + prbconv + avgsen + density,
+  data = crimen,
+  model= "within",
+  efect = "twoways"
+)
+
+stargazer(
+  modelo21, modelo23,
+  type = "text",
+  title = "Comparación de Modelos con y sin Efectos Temporales"
+)
+```
+
+Al incluir **efectos temporales fijos** (años) en el modelo, los coeficientes de las variables clave pierden significancia y el R² cae de 0.729 a 0.003, lo que indica que gran parte de la variación en la criminalidad se explica por factores comunes a todos los individuos en cada año. Esto sugiere que la tendencia de criminalidad está fuertemente influida por shocks o condiciones agregadas más que por variaciones específicas de cada unidad.
