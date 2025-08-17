@@ -1,0 +1,469 @@
+---
+title: "Práctica 2 Regresion Generalizada"
+author: "José Burgos 25-0140"
+date: "2025-08-17"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r, echo=FALSE}
+library(wooldridge)
+library(stargazer)
+library(knitr)
+library(matlib)
+library(car)
+library(lmtest)
+library(sandwich)
+library(AER)
+```
+
+## Ejercicio 4
+
+```{r}
+XtX1 <- matrix(c(50, 300, 300, 2100), nrow = 2, byrow = FALSE)
+XtX2 <- matrix(c(50, 300, 300, 2100), nrow = 2, byrow = FALSE)
+
+# X'y vectores
+Xty1 <- matrix(c(300, 2000), nrow = 2)
+Xty2 <- matrix(c(300, 2200), nrow = 2)
+
+# y'y escalares
+yty1 <- 2100
+yty2 <- 2800
+```
+
+### a) Compute los coeficientes de regresión de minímos cuadrados y las varianzas de los residuos para cada base de datos.
+
+```{r}
+# ---------- (a) Estimación OLS por muestra ----------
+beta1 <- solve(XtX1) %*% Xty1
+beta2 <- solve(XtX2) %*% Xty2
+
+
+# Cálculo de residuos
+e1_sq <- yty1 - t(beta1) %*% Xty1
+e2_sq <- yty2 - t(beta2) %*% Xty2
+
+# Varianza residual s^2 = e'e / (n - k)
+n <- 50
+k <- 2
+s2_1 <- e1_sq / (n - k)
+s2_2 <- e2_sq / (n - k)
+
+# R^2 = 1 - (e'e / TSS)
+TSS1 <- yty1 - (sum(Xty1)^2 / sum(XtX1))
+TSS2 <- yty2 - (sum(Xty2)^2 / sum(XtX2))
+R2_1 <- 1 - as.numeric(e1_sq / TSS1)
+R2_2 <- 1 - as.numeric(e2_sq / TSS2)
+```
+
+### b) Compute la estimación de MCO del vector de coeficientes, asumiendo que los coeficientes y la varianza de las perturbaciones son las mismas en ambas regresiones. Tambien compute la matriz de covarianza asintótica estimada.
+
+```{r}
+# ---------- (b) Estimación conjunta de bajo varianza común ----------
+XtX_sum <- XtX1 + XtX2
+Xty_sum <- Xty1 + Xty2
+beta_pool <- solve(XtX_sum) %*% Xty_sum
+
+# Error residual conjunto
+e_pool_sq <- (yty1 + yty2) - t(beta_pool) %*% (Xty1 + Xty2)
+s2_pool <- e_pool_sq / (2 * n - 2 * k)
+
+# Matriz de covarianza asintótica
+cov_beta_pool <- s2_pool[1, 1] * solve(XtX_sum)
+```
+
+### c) Contraste la hipótesis de que las varianzas de ambas regresiones es la misma sin asumir que los coeficientes son los mismos en las dos regresiones.
+
+```{r}
+F_stat <- as.numeric(s2_1 / s2_2)
+gl1 <- n - k
+gl2 <- n - k
+p_value_f <- 2 * min(pf(F_stat, gl1, gl2), 1 - pf(F_stat, gl1, gl2))
+```
+
+### d) Compute el estimador de MCG factibles de los coeficientes en las regresiones, asumiendo que la constante y la pendiente es la misma para ambas regresiones. Compute el estimador de la matriz de varianza y compare con los resultados de b).
+
+```{r}
+Omega_inv1 <- diag(1 / s2_1[1, 1], n)
+Omega_inv2 <- diag(1 / s2_2[1, 1], n)
+
+# Como no tenemos los datos individuales, estimación MCG a mano no es posible.
+# Pero podemos computar el estimador ponderado de varianza combinado:
+w1 <- 1 / s2_1
+w2 <- 1 / s2_2
+
+# Convertir pesos a escalares numéricos
+w1 <- as.numeric(1 / s2_1)
+w2 <- as.numeric(1 / s2_2)
+
+# Estimador FGLS corregido
+beta_fgls <- solve(w1 * XtX1 + w2 * XtX2) %*% (w1 * Xty1 + w2 * Xty2)
+cov_fgls <- solve(w1 * XtX1 + w2 * XtX2)
+
+beta_fgls <- solve(w1 * XtX1 + w2 * XtX2) %*% (w1 * Xty1 + w2 * Xty2)
+cov_fgls <- solve(w1 * XtX1 + w2 * XtX2)
+
+results <- data.frame(
+  Method = c("OLS Sample 1", "OLS Sample 2", "Pooled OLS", "FGLS"),
+  Intercept = c(beta1[1], beta2[1], beta_pool[1], beta_fgls[1]),
+  Slope = c(beta1[2], beta2[2], beta_pool[2], beta_fgls[2]),
+  Residual_Variance = c(s2_1, s2_2, s2_pool, NA)
+)
+kable(results, caption = "Comparación de estimaciones por método")
+```
+
+## 8. Considere el modelo siguiente para explicar el comportamiento del sueño:
+
+$$
+sleep = \beta_0 + \beta_1 totwrk + \beta_2 educ + \beta_3 age + \beta_4 yngkid + \beta_6 male + u
+$$
+
+### a) Dé un modelo que permita que la varianza de $u$ difiera entre hombres ($male$) y mujeres. La varianza no debe depender de otros factores.
+
+Un modelo de heterocedasticidad que capture diferencias por sexo puede expresarse como:
+
+$$
+Var(u_i \mid male_i) = 
+\begin{cases} 
+\sigma^2_h & \text{si } male_i = 1 \\[6pt]
+\sigma^2_m & \text{si } male_i = 0
+\end{cases}
+$$
+
+*Es decir, los hombres y las mujeres pueden presentar varianzas distintas de los errores, pero esa varianza no depende de otros factores.*
+
+### b) Emplee los datos en `sleep75` (librería `wooldridge`) para estimar los parámetros de la ecuación de heterocedasticidad. (Tiene que estimar la ecuación para sleep primero mediante MCO para obtener los residuales de MCO.) ¿Es la varianza estimada de $u$ mayor para los hombres o para las mujeres?
+
+```{r}
+# Estimar el modelo:
+data("sleep75")
+
+modelo1 <- lm(sleep ~ totwrk + educ + age + yngkid + male, data = sleep75)
+
+summary(modelo1)$coefficients |> 
+  kable(caption = "Estimación del modelo de regresión lineal para el sueño")
+```
+
+*Al estimar el modelo por MCO se observa que las variables `totwrk`, `educ` y `age` tienen efectos negativos sobre las horas de sueño, mientras que `male` muestra un efecto positivo y significativo al 5 %.*
+
+*Al calcular las varianzas de los residuos de MCO separando la muestra por hombres y mujeres, se encuentra que la varianza residual estimada es mayor en los hombres, lo que sugiere mayor dispersión no explicada en este grupo.*
+
+### c) ¿Es la varianza de $u$ diferente estadísticamente para hombres y para mujeres?
+
+Para contrastar si la diferencia es estadísticamente significativa, se puede emplear una prueba de igualdad de varianzas (por ejemplo, prueba de Breusch–Pagan o prueba de Levene con la variable `male`).
+
+```{r}
+# Prueba de Breusch-Pagan para heterocedasticidad
+bptest(modelo1)
+
+
+```
+
+### Prueba de heterocedasticidad (Breusch–Pagan)
+
+Se aplicó la prueba de Breusch–Pagan al modelo estimado:
+
+$$
+H_0: \text{Var}(u_i \mid X) = \sigma^2 \quad \text{(homocedasticidad)}
+$$
+
+$$
+H_1: \text{Var}(u_i \mid X) \neq \sigma^2 \quad \text{(heterocedasticidad)}
+$$
+
+El estadístico de prueba fue $BP = 10.603$ con $df = 5$ y un valor $p = 0.0599$.
+
+-   *Al nivel de significancia usual del 5 %, no se rechaza la hipótesis nula, por lo que no hay evidencia estadísticamente fuerte de heterocedasticidad.*
+
+-   *Sin embargo, dado que el* $p-valor$ es cercano al 0.05, al nivel del 10 % sí se rechaza $H_0$. Esto sugiere que podrían existir problemas moderados de heterocedasticidad y sería recomendable utilizar errores estándar robustos para mayor confiabilidad en la inferencia.
+
+## 9. Considere el siguiente modelo sobre los determinantes del precio de una vivienda:
+
+$$price = \beta_0 + \beta_1 lotsize + \beta_2 sqrft + \beta_3 bdrms + u$$
+
+donde $price$ es el precio en miles de dólares, $lotsize$ es el tamaño del lote (solar) en pies cuadrados, $sqrft$ es el tamaño de la casa en pies cuadrados y $bdrms$ es el número de habitaciones.
+
+**Tareas:**
+
+### a) Usando la base de datos `hprice1`, estime el modelo por MCO. Muestre los resultados en una tabla.
+
+```{r}
+modelo2 <- lm(price ~ lotsize + sqrft + bdrms, data = hprice1)
+
+summary(modelo2)$coefficients |> 
+  kable(caption = "Estimación del modelo de regresión lineal para el precio de la vivienda")
+```
+
+### b) Realice la prueba de heterocedasticidad de Breusch-Pagan. ¿Qué concluye acerca de los errores estándar estimados en el inciso (a)?
+
+```{r}
+bptest(modelo2)
+```
+
+$$
+H_0:\ \operatorname{Var}(u_i \mid X) = \sigma^2 \quad \text{(homocedasticidad)} \qquad
+H_1:\ \operatorname{Var}(u_i \mid X) \neq \sigma^2.
+$$
+
+El resultado fue $BP = 14.092$ con $df = 3$ y $p\text{-value} = 0.002782$.
+
+Dado que $p < 0.01$, se rechaza la homocedasticidad al 1 %. Por tanto, los errores estándar de MCO reportados en (a) no son fiables para la inferencia; en lo sucesivo se deben emplear errores estándar robustos (por ejemplo, tipo HC1/White) o métodos alternativos como MCG si se modela la forma de la varianza.
+
+### c) Obtenga los errores estándar robustos y realice las pruebas de significancia individual de los coeficientes estimados.
+
+```{r}
+coeftest(modelo2, vcov = vcovHC(modelo2, type = "HC1"))
+```
+
+*Al corregir por heterocedasticidad con errores robustos, la única variable con efecto significativo sobre el precio es el tamaño de la vivienda (sqrft), mientras que las demás dejan de serlo. Esto evidencia que los resultados del modelo OLS original podían sobrestimar la significancia de algunas variables debido a la heterocedasticidad.*
+
+## 10. Para este ejercicio, emplee el archivo de datos `vote1`.
+
+### a) Estime un modelo en el que $voteA$ sea la variable dependiente y $prtystrA$, $democA$, $log(expendA)$ y $log(expendB)$ sean las variables independientes. Obtenga los residuales de MCO, $\hat{u}_i$, y regrese éstos sobre todas las variables independientes. Explique por qué obtiene $R^2 = 0$.
+
+```{r}
+modelo10 <- lm(voteA ~ prtystrA + democA + log(expendA) + log(expendB), data = vote1)
+
+summary(modelo10)$coefficients |> 
+  kable(caption = "Resultados del modelo de regresión lineal para voteA")
+```
+
+Los resultados muestran que todas las variables explicativas son estadísticamente significativas al 1 %. En particular, el gasto en campaña del candidato A (log(expendA)) influye positivamente en el porcentaje de votos, mientras que el gasto del candidato B (log(expendB)) lo hace de forma negativa. La pertenencia al partido demócrata (democA) también incrementa el apoyo.
+
+Respecto a la instrucción del enunciado sobre $R^2 = 0$ al regredir los residuos contra las variables independientes, esto se cumple porque, por construcción, los residuos de MCO son ortogonales a los regresores.
+
+### b) Ahora calcule la prueba de Breusch-Pagan para heterocedasticidad. Emplee la versión del estadístico F y dé el valor-p.
+
+```{r}
+# Test Breusch-Pagan
+bptest(modelo10, studentize = TRUE)
+
+```
+
+*Al 5 % de significancia no rechazamos la hipótesis nula de homocedasticidad, pero al 10 % sí se rechaza. Por tanto, existe evidencia moderada de heterocedasticidad, aunque no muy fuerte.*
+
+### c) Calcule el caso especial de la prueba de White para heterocedasticidad, usando de nuevo la forma del estadístico F. ¿Qué tan fuerte es ahora la evidencia de heterocedasticidad?
+
+```{r}
+bptest(modelo10, ~ prtystrA + democA + log(expendA) + log(expendB) +
+         I(prtystrA^2) + I(democA^2) + I(log(expendA)^2) + I(log(expendB)^2),
+       data = vote1, studentize = TRUE)
+```
+
+*En este caso, el valor-p es menor al 1 %, lo que implica un rechazo contundente de la hipótesis nula de homocedasticidad. Es decir, existe evidencia fuerte de heterocedasticidad en el modelo, más robusta que la detectada en la prueba de Breusch-Pagan simple.*
+
+*Esto confirma que los errores no presentan varianza constante y, por tanto, es recomendable emplear errores estándar robustos o métodos de estimación alternativos (como White o MCO robusto) para obtener inferencia confiable.*
+
+# Variables explicativas
+
+## 11) Para este ejercicio emplee los datos del archivo wage2.
+
+### a) Estime el modelo
+
+$$
+log(wage) = \beta_0 + \beta_1 educ + \beta_2 exper + \beta_3 tenure + \beta_4 married + \beta_5 black + \beta_6 south + \beta_7 urban + u
+$$
+
+y de el resultado en una tabla. Manteniendo todos los demás factores constantes, ¿cuál es la diferencia aproximada entre el salario mensual de afroamericanos y no afroamericanos? ¿Es esta diferencia estadísticamente significativa?
+
+```{r}
+modelo11 <- lm(log(wage) ~ educ + exper + tenure + married + black + south + urban, 
+               data = wage2)
+summary(modelo11)$coefficients |> 
+  kable(caption = "Estimación del modelo de regresión lineal para log(wage)")
+
+```
+
+*Los resultados indican que, manteniendo constantes la educación, experiencia, tiempo en el empleo, estado civil, región y urbanidad, los afroamericanos perciben en promedio un salario mensual aproximadamente un 17 % menor que los no afroamericanos. Esta diferencia es estadísticamente significativa, lo que confirma la existencia de una brecha salarial relevante entre ambos grupos.*
+
+### b) Agregue a esta ecuación las variables $exper^2$ y $tenure^2$ y muestre que no son conjuntamente significativas al nivel de 20%.
+
+```{r}
+modelo11b <- lm(log(wage) ~ educ + exper + I(exper^2) + tenure + I(tenure^2) + 
+                 married + black + south + urban, data = wage2)
+summary(modelo11b)$coefficients |>
+  kable(caption = "Estimación del modelo de regresión lineal con términos cuadráticos")
+```
+
+*Al incorporar los términos cuadráticos de experiencia y antigüedad en el empleo, se observa que ninguno de ellos resulta estadísticamente significativo de manera conjunta al nivel del 20%. Esto implica que no existe evidencia sólida para concluir que la relación entre el salario y estas variables sea no lineal, por lo que la inclusión de los términos al cuadrado no aporta un valor adicional relevante al modelo.*
+
+### c) Amplíe el modelo original de manera que el rendimiento a la educación dependa de la raza y pruebe si en realidad el rendimiento de la educación depende de la raza.
+
+```{r}
+modelo11c <- lm(log(wage) ~ educ * black + exper + tenure + married + south + urban, 
+                 data = wage2)
+summary(modelo11c)$coefficients |>
+  kable(
+   caption = "Estimación del modelo de regresión lineal con interacción entre educ y black"
+  )
+```
+
+*Al ampliar el modelo con la interacción entre educación y raza (educ × black), se observa que el coeficiente de la interacción no resulta estadísticamente significativo. Esto implica que el rendimiento de la educación sobre el salario no difiere de manera significativa entre afroamericanos y no afroamericanos. En otras palabras, aunque la educación tiene un efecto positivo y significativo sobre los ingresos, no se encuentra evidencia de que dicho efecto varíe en función de la raza.*
+
+### d) Partiendo nuevamente del modelo original, permita que los salarios difieran entre cuatro grupos: casados afroamericanos, casados no afroaméricanos, solteros afroaméricanos y solteros no afroaméricanos.
+
+```{r}
+modelo11d <- lm(log(wage) ~ educ + exper + tenure + married * black + south + urban, 
+                 data = wage2)
+summary(modelo11d)$coefficients |>
+  kable(
+   caption = "Estimación del modelo de regresión lineal con interacción entre married y black"
+  )
+```
+
+¿Cuál es la diferencia de salario entre afroaméricanos casados y no afroaméricanos casados?
+
+*La interacción entre casados y afroamericanos tiene un coeficiente de aproximadamente 0.063. Esto indica que, manteniendo constantes los demás factores, los afroamericanos casados presentan un salario alrededor de 6.3% mayor que los no afroamericanos casados. Además, este efecto resulta estadísticamente significativo (p = 0.0003), lo que confirma que existe una diferencia salarial clara entre ambos grupos dentro de la categoría de casados.*
+
+# Variables instrumentales
+
+## 12) Considere el siguiente modelo de regresión:
+
+$$
+y_{1} = \beta_{0} + \beta_{1} y_{2} + \beta_{2} z_{1} + u
+$$
+
+Donde $y_{2}$ es una variable explicativa con problemas de endogeneidad y $z_{1}$ es una variable exógena, mientras que $u$ es el componente de error del modelo y cumple con los supuestos usuales. A esta ecuación se le conoce como ecuación estructural para enfatizar que es una relación estructural.
+
+### a) Suponga que se dispone de un instrumento para la variable $y_{2}$ denominado $z_{2}$. ¿Cuáles son las condiciones que debe poseer ese instrumento para que pueda considerarse válido?
+
+1.  Relevancia: El instrumento $z_2$ debe estar correlacionado con la variable endógena $y_2$, es decir:\
+    $$
+    \text{Cov}(z_2, y_2) \neq 0
+    $$ Esto garantiza que $z_2$ aporta variación útil para explicar $y_2$.
+
+2.  Exogeneidad (validez):
+
+    El instrumento debe ser independiente del término de error $u$, es decir:\
+    $$
+    \text{Cov}(z_2, u) = 0
+    $$\
+    De este modo, cualquier relación entre $z_2$ y $y_1$ se transmite únicamente a través de su efecto en $y_2$, y no por una correlación espuria con el error.
+
+### b) La forma reducida para $y_{2}$ es:
+
+$$
+y_{2} = \pi_{0} + \pi_{1} z_{1} + \pi_{2} z_{2} + v_{2}
+$$
+
+Introduciendo esta expresión en la ecuación original, se obtiene la forma reducida para $y_1$
+
+La forma reducida para $y_{1}$ es:
+
+$$
+y_{1} = \alpha_{0} + \alpha_{1} z_{1} + \alpha_{2} z_{2} + v_{1}
+$$
+
+Encuentre los $\alpha_{j}$ en términos de los $\beta_{j}$ y $\pi_{j}$.
+
+adas: $$
+y_1=\beta_0+\beta_1 y_2+\beta_2 z_1+u, 
+\qquad
+y_2=\pi_0+\pi_1 z_1+\pi_2 z_2+v_2,
+$$ sustituyendo $y_2$ en la ecuación estructural obtenemos la **forma reducida de** $y_1$: $$
+\begin{aligned}
+y_1 
+&= \beta_0+\beta_1(\pi_0+\pi_1 z_1+\pi_2 z_2+v_2)+\beta_2 z_1+u \\
+&= (\beta_0+\beta_1\pi_0)\;+\;(\beta_1\pi_1+\beta_2)z_1\;+\;(\beta_1\pi_2)z_2\;+\;(u+\beta_1 v_2).
+\end{aligned}
+$$
+
+Esto puede escribirse como: $$
+y_1=\alpha_0+\alpha_1 z_1+\alpha_2 z_2+v_1,
+$$ donde $$
+\boxed{\;\alpha_0=\beta_0+\beta_1\pi_0,\quad
+\alpha_1=\beta_1\pi_1+\beta_2,\quad
+\alpha_2=\beta_1\pi_2,\quad
+v_1=u+\beta_1 v_2\;}
+$$ y, si los instrumentos son válidos, $(E(z_j v_1)=0)$.
+
+### c) ¿Cómo estimar consistentemente (alpha_j)?
+
+Como la forma reducida solo incluye instrumentos exógenos ($z_1,z_2$), los parámetros ($\alpha_0,\alpha_1,\alpha_2$) se estiman consistentemente por MCO regresando ($y_1$) sobre $(\{1,z_1,z_2\})$.
+
+<!-- -->
+
+13) Considere el siguiente modelo de regresión de series de tiempo donde la variable explicativa tiene el siguiente error de medición
+
+$$
+y_{t} = \beta_{0} + \beta_{1} x_{t}^* + u_{t}
+$$
+
+$$
+x_{t} = x_{t}^* + e_{t}
+$$
+
+donde $x_{t}^*$ es la variable explicativa verdadera, $x_{t}$ es la variable explicativa observada, $e_{t}$ es el error de medición y $u_{t}$ es el componente de error del modelo. Suponga que los errores de medición son independientes de $x_{t}^*$ y de $u_{t}$ y que todos los procesos son estacionarios.
+
+14) Los datos en fertil2 incluyen información sobre un grupo de mujeres de Botswana durante 1988 de el numero de hijos, años de educación, edad y variables de religión y estatus económico.
+
+### a) Estime el modelo
+
+$$
+children = \beta_{0} + \beta_{1} educ + \beta_{2} age + \beta_{3} age^2 + u
+$$
+
+```{r}
+modelo14a <- lm(children ~ educ + age + I(age^2), data = fertil2)
+summary(modelo14a)$coefficients |>
+  kable(
+   caption = "Estimación del modelo de regresión lineal para number of children"
+  )
+```
+
+-   El coeficiente de `educ` es -0.0906 ($p < 0.01$). Manteniendo fija la edad, un año adicional de educación reduce en promedio el número de hijos en 0.09 por mujer.
+
+-   Implicación práctica: si 100 mujeres recibieran un año más de educación, se esperaría, en conjunto, alrededor de 9 hijos menos (100 × 0.0906 = 9).
+
+-   Los coeficientes de `age` ($> 0$) y `age^2` ($< 0$) son significativos y sugieren que la fertilidad aumenta con la edad pero a un ritmo decreciente; dentro de edades reproductivas, el efecto neto es positivo pero cóncavo.
+
+La educación se asocia de forma negativa y estadísticamente significativa con la fertilidad: más educación es igual menos hijos esperados.
+
+#### b)
+
+Sea el modelo estructural:
+
+$$
+children = \beta_0 + \beta_1\,educ + \beta_2\,age + \beta_3\,age^2 + u.
+$$
+
+Proponemos `frsthalf` (1 si la mujer nació en los primeros seis meses del año) como VI para `educ`. Debe cumplir:
+
+1.  **Relevancia** $$
+    \operatorname{Cov}(\texttt{frsthalf},\, educ \mid age,age^2)\neq 0
+    $$ (las reglas de corte escolar pueden inducir más años de estudio a quienes nacen antes del corte).
+
+2.  **Exogeneidad (exclusión)** $$
+    \operatorname{Cov}(\texttt{frsthalf},\, u \mid age,age^2)=0
+    $$ es decir, `frsthalf` solo afecta la fertilidad **vía** su efecto sobre `educ` (no por canales directos).
+
+Si (1) y (2) se sostienen, `frsthalf` es una VI razonable para identificar el efecto causal de `educ` sobre la fertilidad.
+
+#### c) Estime el modelo en a. utilizando frsthalf como una VI para educ. Compare con el efecto estimado con MCO de la sección a.
+
+```{r}
+modelo14c <- ivreg(children ~ age + I(age^2) + frsthalf | age + I(age^2), data = fertil2)
+summary(modelo14c)$coefficients |>
+  kable(
+   caption = "Estimación del modelo de regresión lineal con variable instrumental frsthalf"
+  )
+```
+
+#### d) Añada las variables binarias electric, tv y biclycle al modelo y asuma que son exógenas. Estime la ecuación por MCO y MC2E y compare los coeficientes estimados para educ. Interprete el coeficiente asociado a tv y explique por qué tener televisión tiene un efecto negativo sobre la fertilidad.)
+
+```{r}
+modelo14d <- ivreg(children ~ educ + age + I(age^2) + electric + tv + bicycle | 
+                     age + I(age^2) + frsthalf, data = fertil2)
+summary(modelo14d)$coefficients |>
+  kable(
+   caption = "Estimación del modelo de regresión lineal con variables adicionales"
+  )
+```
+
+De acuerdo con los resultados mostrados en la **Tabla 11**, al incluir las variables binarias *electric*, *tv* y *bicycle* en el modelo, el coeficiente estimado de **educ** es aproximadamente -0.1718. Esto implica que, manteniendo todo lo demás constante, un año adicional de educación se asocia con una **reducción en la cantidad de hijos**, y esta relación resulta estadísticamente significativa (p = 0.012).
+
+En cuanto a la variable **tv**, el coeficiente negativo indica que **tener televisión está asociado con una menor fertilidad**. La interpretación económica de este resultado puede estar vinculada a varios factores: el acceso a televisión suele estar correlacionado con un mayor nivel socioeconómico y exposición a información (incluyendo planificación familiar), lo que puede llevar a una reducción en la cantidad de hijos. Además, la televisión puede representar un sustituto en el uso del tiempo en el hogar y modificar patrones culturales respecto al tamaño de la familia.

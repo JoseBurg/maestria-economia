@@ -1,0 +1,256 @@
+---
+title: "Regresión Generalizada" 
+subtitle: "Práctica 2" 
+author: "José Burgos 25-0140" 
+date: "2025-08-17" 
+output: pdf_document 
+editor: visual
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1.  **Matriz de covarianzas entre estimadores**
+
+    ¿Cuál es la matriz de covarianzas, $\operatorname{Cov}\!\big[\hat{\beta},\, \hat{\beta}-\mathbf{b}\big]$, del estimador de MCG $$
+    \hat{\beta} \;=\; (X^{\prime}\Omega^{-1}X)^{-1}X^{\prime}\Omega^{-1}\mathbf{y},
+    $$ y la diferencia de esta con la del estimador de MCO $$
+    \mathbf{b} \;=\; (X^{\prime}X)^{-1}X^{\prime}\mathbf{y}\, ?
+    $$
+
+2.  **Suponga que en el modelo de regresión generalizado** $\Omega$ es conocida.
+
+    a)  ¿Cuál es la matriz de covarianzas de los estimadores de MCO y MCG de $\beta$?
+
+    b)  ¿Cuál es la matriz de covarianzas del vector de residuos de MCO, $\mathbf{e} = \mathbf{y} - X\mathbf{b}$?
+
+    c)  ¿Cuál es la matriz de covarianzas del vector de residuos de MCG, $\hat{\boldsymbol{\varepsilon}} = \mathbf{y} - X\hat{\beta}$?
+
+    d)  ¿Cuál es la matriz de covarianzas de los vectores de residuos de MCO y MCG?
+
+3.  **Modelo con varianza no constante**
+
+    Suponga que el modelo de regresión es $$
+    y_i = \mu + \varepsilon_i, \qquad
+    E(\varepsilon_i\,|\,x_i)=0,\quad
+    \operatorname{Cov}(\varepsilon_i,\varepsilon_j\,|\,x_i,x_j)=0 \text{ para } i\neq j,\quad
+    \operatorname{Var}(\varepsilon_i\,|\,x_i)=\sigma^2 x_i^{2},\; x_i>0.
+    $$
+
+    a)  Dada una muestra de observaciones de $y_i$ y $x_i$, ¿cuál es el **estimador más eficiente** de $\mu$? ¿Cuál es su **varianza**?
+    b)  **¿Cuál es el estimador de MCO y cuál es la varianza del estimador de MCO?**
+
+Especifique el estimador de Mínimos Cuadrados Ordinarios como $$
+\mathbf{b} \;=\; (X^{\prime}X)^{-1}X^{\prime}\mathbf{y},
+$$ y su varianza bajo homocedasticidad como $$
+\operatorname{Var}(\mathbf{b}\mid X) \;=\; \sigma^{2}(X^{\prime}X)^{-1}.
+$$
+
+## 4) Dos muestras de 50 observaciones
+
+Dos muestras de $n=50$ producen las siguientes **matrices de momentos** (en cada caso, $X$ incluye una constante y una variable):
+
+**Muestra 1** $$
+X^{\prime}X=
+\begin{bmatrix}
+50 & 300\\
+300 & 2100
+\end{bmatrix},
+\quad
+\mathbf{y}^{\prime}X=
+\begin{bmatrix}
+300 & 2000
+\end{bmatrix},
+\quad
+\mathbf{y}^{\prime}\mathbf{y}=2100.
+$$
+
+**Muestra 2** $$
+X^{\prime}X=
+\begin{bmatrix}
+50 & 300\\
+300 & 2100
+\end{bmatrix},
+\quad
+\mathbf{y}^{\prime}X=
+\begin{bmatrix}
+300 & 2200
+\end{bmatrix},
+\quad
+\mathbf{y}^{\prime}\mathbf{y}=2800.
+$$
+
+\noindent Con esta información:
+
+a)  Calcule los coeficientes de MCO $\mathbf{b}=(X^{\prime}X)^{-1}X^{\prime}\mathbf{y}$ y la varianza residual en cada muestra; reporte $R^{2}$.
+
+b)  Obtenga el estimador conjunto de MCO suponiendo **coeficientes y varianza comunes** en ambas muestras, y su matriz de covarianza asintótica.
+
+c)  Pruebe si las **varianzas residuales** de ambas regresiones son iguales sin imponer igualdad de coeficientes.
+
+d)  Estime el **MCG factible** imponiendo intercepto y pendiente comunes; compare su matriz de varianza con la de (b).
+
+## 5) Varianza con heterocedasticidad en regresión simple
+
+Para el modelo $$
+y_i=\beta_1+\beta_2 x_i+\varepsilon_i,\qquad 
+\operatorname{Var}(\varepsilon_i\mid x_i)=\sigma_i^2,
+$$ muestre que $$
+\operatorname{Var}\!\big(b_2\mid \mathbf{x}\big)
+= \Bigg[\sum_{i=1}^{N}(x_i-\bar x)^2\Bigg]^{-1}
+\Bigg[\sum_{i=1}^{N}(x_i-\bar x)^2\,\sigma_i^2\Bigg]
+\Bigg[\sum_{i=1}^{N}(x_i-\bar x)^2\Bigg]^{-1},
+$$ y que bajo **homocedasticidad** $\sigma_i^2=\sigma^2$ se reduce a $$
+\operatorname{Var}\!\big(b_2\mid \mathbf{x}\big)
+=\frac{\sigma^2}{\sum_{i=1}^{N}(x_i-\bar x)^2}.
+$$
+
+## 6) MCO sin término constante (dos regresores)
+
+Considere $$
+y_i=\beta_1 x_{i1}+\beta_2 x_{i2}+\varepsilon_i.
+$$
+
+### (a) Estimador de $\beta_2$
+
+Con la función de suma de cuadrados $$
+S(\beta_1,\beta_2\mid \mathbf{x}_1,\mathbf{x}_2)=
+\sum_{i=1}^{N}\big(y_i-\beta_1 x_{i1}-\beta_2 x_{i2}\big)^2,
+$$ obtenga las derivadas parciales respecto de $\beta_1$ y $\beta_2$ y muestre que el estimador de MCO de $\beta_2$ es $$
+b_2=\frac{\left(\sum x_{i1}^2\right)\left(\sum x_{i2}y_i\right)-\left(\sum x_{i1}x_{i2}\right)\left(\sum x_{i1}y_i\right)}
+{\left(\sum x_{i1}^2\right)\left(\sum x_{i2}^2\right)-\left(\sum x_{i1}x_{i2}\right)^2}.
+$$
+
+### (b) Caso $x_{i1}=1$
+
+Si $x_{i1}=1$ para todo $i$, muestre que el estimador anterior se reduce a $$
+b_2
+=\frac{\displaystyle \frac{1}{N}\sum_{i=1}^{N} x_{i2}y_i\;-\;\Big(\frac{1}{N}\sum_{i=1}^{N} x_{i2}\Big)\Big(\frac{1}{N}\sum_{i=1}^{N} y_i\Big)}
+{\displaystyle \frac{1}{N}\sum_{i=1}^{N} x_{i2}^2\;-\;\Big(\frac{1}{N}\sum_{i=1}^{N} x_{i2}\Big)^2}
+$$
+
+c)  En el estimador de la parte a), reemplace $y_i, x_{i1}, x_{i2}$ por $y_i^* = \frac{y_i}{\sqrt{h_i}}, \; x_{i1}^* = \frac{x_{i1}}{\sqrt{h_i}}, \; x_{i2}^* = \frac{x_{i2}}{\sqrt{h_i}}$.
+
+Estas son variables transformadas por el modelo de heterocedasticidad $\sigma_i^2 = \sigma^2 h(z_i) = \sigma h_i$.
+
+Muestre que el estimador de MCG resultante puede escribirse como:
+
+$$
+\hat{\beta} = \frac{\sum a_i x_{i2} y_i - \sum a_i x_{i2} \sum a_i y_i}
+{\sum a_i x_{i2}^2 - \left( \sum a_i x_{i2} \right)^2},
+$$
+
+donde $a_i = \frac{1}{c h_i}$ y $c = \sum \left( \frac{1}{h_i} \right)$.
+
+Encuentre $\sum a_i$.
+
+d)  Muestre que bajo homocedasticidad $\hat{\beta}_2 = b_2$.
+
+Ejercicio 7 Considere el modelo simple de regresión: $y_i = \beta_1 + \beta_2 x_i + \varepsilon_i$
+
+donde se cree que existe heterocedasticidad de la forma:
+
+$\sigma_i^2 = \sigma^2 x_i^2$
+
+Se tienen 4 observaciones, con: \$\$x=(1,2,3,4),\quady=(3,4,5,6)\$\$
+
+a)  Use la fórmula del estimador de MCO para computar el valor estimado de $\beta_2$. En este caso:
+
+$$
+\frac{\sum x_{i2} y_i}{N} = 10, \quad \frac{\sum x_{i2}^2}{N} = 7
+$$
+
+b)  Refiriéndose al ejercicio 6 (b), ¿cuál es el valor de
+
+$$
+c = \sum \left( \frac{1}{h_i} \right)?
+$$
+
+c)  Refiriéndose al ejercicio 6 (c), ¿cuál es el valor de
+
+$$
+a_i = \frac{1}{c h_i}, \quad i=1,\ldots,4?
+$$
+
+¿A qué es igual
+
+$$
+\sum a_i?
+$$
+
+d)  Use la fórmula para el estimador de mínimos cuadrados generalizados en el ejercicio 6 (c) para computar el valor estimado de $\beta_2$.
+
+<!-- -->
+
+8.  Considere el modelo siguiente para explicar el comportamiento del sueño:
+
+$$
+sleep = \beta_0 + \beta_1 totwrk + \beta_2 educ + \beta_3 age + \beta_4 yngkid + \beta_6 male + u
+$$
+
+a)  Dé un modelo que permita que la varianza de $u$ difiera entre hombres ($male$) y mujeres. La varianza no debe depender de otros factores.
+
+    ```{r, echo=FALSE}
+    library(dplyr)
+    library(stargazer)
+    library(wooldridge)
+    library(knitr)
+    ```
+
+<!-- -->
+
+b)  Emplee los datos en `sleep75` (librería *wooldridge*) para estimar los parámetros de la ecuación de heterocedasticidad. (Tiene que estimar la ecuación para `sleep` primero mediante MCO para obtener los residuos de MCO). ¿Es la varianza estimada de $u$ mayor para los hombres o para las mujeres?
+
+    ```{r}
+
+    modelo1 <- lm(sleep ~ totwrk + educ + age + yngkid + male, data = sleep75)
+    summary(modelo1)$coefficients |> 
+      kable(caption = "Estimación del modelo de regresión lineal para el sueño")
+    ```
+
+c)  ¿Es la varianza de $u$ diferente estadísticamente entre hombres y mujeres?
+
+<!-- -->
+
+9.  Considere el siguiente modelo sobre los determinantes del precio de una vivienda:
+
+$$price = \beta_0 + \beta_1 lotsize + \beta_2 sqrft + \beta_3 bdrms + u$$
+
+donde $price$ es el precio en miles de dólares, $lotsize$ es el tamaño del lote (solar) en pies cuadrados, $sqrft$ es el tamaño de la casa en pies cuadrados y $bdrms$ es el número de habitaciones.
+
+**Tareas:**
+
+a)  Usando la base de datos `hprice1`, estime el modelo por MCO. Muestre los resultados en una tabla.
+
+b)  Realice la prueba de heterocedasticidad de Breusch-Pagan. ¿Qué concluye acerca de los errores estándar estimados en el inciso (a)?
+
+c)  Obtenga los errores estándar robustos y realice las pruebas de significancia individual de los coeficientes estimados.
+
+<!-- -->
+
+10. Para este ejercicio, emplee el archivo de datos `vote1`.
+
+<!-- -->
+
+a)  Estime un modelo en el que $voteA$ sea la variable dependiente y $prtystrA$, $democA$, $log(expendA)$ y $log(expendB)$ sean las variables independientes. Obtenga los residuales de MCO, $\hat{u}_i$, y regrese éstos sobre todas las variables independientes. Explique por qué obtiene $R^2 = 0$.
+
+b)  Ahora calcule la prueba de Breusch-Pagan para heterocedasticidad. Emplee la versión del estadístico F y dé el valor-p.
+
+c)  Calcule el caso especial de la prueba de White para heterocedasticidad, usando de nuevo la forma del estadístico F. ¿Qué tan fuerte es ahora la evidencia de heterocedasticidad?
+
+d)  Para este ejercicio emplee los datos del archivo `wage2`.
+
+    a)  Estime el modelo
+
+    $$
+    \log(wage) = \beta_0 + \beta_1 educ + \beta_2 exper + \beta_3 tenure + 
+    \beta_4 married + \beta_5 black + \beta_6 south + \beta_7 urban + u
+    $$
+
+    y presente el resultado en una tabla.
+
+    Manteniendo todos los demás factores constantes, ¿cuál es la diferencia aproximada entre el salario mensual de afroamericanos y no afroamericanos?\
+    ¿Es esta diferencia estadísticamente significativa?
+
+    b)  

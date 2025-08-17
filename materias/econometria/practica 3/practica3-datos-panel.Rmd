@@ -91,7 +91,6 @@ phtest(modelo1, modelo12)
 
 La prueba de Hausman contrasta la hipótesis nula de que el estimador de efectos aleatorios (EA) es consistente y eficiente contra la alternativa de que solo el estimador de efectos fijos (EF) es consistente. En tu caso, el estadístico de Hausman para comparar EF y EA es: Con modelo "between": $\chi^2(5) = 21.801$, `p = 0.000571` Debido a que el `p \< 0.01`, se rechaza la hipótesis nula. Esto indica que el modelo de efectos aleatorios es inconsistente y, por tanto, el modelo de efectos fijos es el más apropiado para este conjunto de datos.
 
-
 ### (d) Interprete el efecto de pertenecer a un sindicato (union).
 
 El coeficiente de union es 0.259, lo que indica que, en promedio, los trabajadores que pertenecen a un sindicato (generando un efecto fijo) ganan un 25.9% más que aquellos que no pertenecen a un sindicato, manteniendo constantes las demás variables del modelo. Este efecto es estadísticamente significativo al nivel del 1% (`p \< 0.01`), lo que sugiere que la pertenencia a un sindicato tiene un impacto positivo y significativo en los salarios de los trabajadores.
@@ -149,7 +148,6 @@ stargazer(
 
 Al incluir **efectos temporales fijos** (años) en el modelo, los coeficientes de las variables clave pierden significancia y el $R^2$ cae de 0.729 a 0.003, lo que indica que gran parte de la variación en la criminalidad se explica por factores comunes a todos los individuos en cada año. Esto sugiere que la tendencia de criminalidad está fuertemente influida por shocks o condiciones agregadas más que por variaciones específicas de cada unidad.
 
-
 ## Ejercicio 3: Productividad agrícola
 
 Variable dependiente: `crop output`
@@ -157,7 +155,6 @@ Variable dependiente: `crop output`
 Variables explicativas: `fertilizer`, `labor`, `land`
 
 ### (a) Estime un modelo de efectos fijos para evaluar el impacto del fertilizante.
-
 
 ```{r}
 fertil <- read.csv("./fertilizer.csv")
@@ -167,7 +164,6 @@ modelo3 <- plm(crop_output ~ fertilizer + labor + land,
   data = fertil, model = "within")
 stargazer(modelo3, type = "text")
 ```
-
 
 ### (b) Incluya el término cuadrático de fertilizer y comente si hay rendimientos decrecientes.
 
@@ -179,7 +175,6 @@ stargazer(modelo31, type = "text")
 
 El coeficiente de `fertilizer` es positivo, mientras que el coeficiente de `I(fertilizer^2)` es negativo. Esto indica que hay rendimientos decrecientes a medida que se aumenta el uso de fertilizante, ya que el efecto marginal del fertilizante disminuye con niveles más altos de uso.
 
-
 ### (c) Estime un modelo con efectos aleatorios y compare con el modelo anterior.
 
 ```{r}
@@ -188,6 +183,7 @@ modelo32 <- plm(crop_output ~ fertilizer + I(fertilizer^2) + labor + land,
 stargazer(modelo31, modelo32, type = "text",
   title = "Comparación de Modelos de Efectos Fijos y Aleatorios")
 ```
+
 La comparación entre el modelo de efectos fijos y el modelo de efectos aleatorios muestra que los coeficientes son similares, pero el modelo de efectos aleatorios es más eficiente (menor error estándar).
 
 <!-- Test de hausman -->

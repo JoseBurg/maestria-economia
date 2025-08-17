@@ -1,0 +1,354 @@
+---
+title: "Modelos de Variable Dependiente Cualitativa o Limitada"
+subtitle: "Práctica 3"
+author: "José Burgos 25-0140"
+date: "2025-08-16"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Intrucciones Generales
+
+Esta práctica tiene como objetivo aplicar diversos modelos econométricos cuando la variable dependiente es cualitativa o limitada. Utilizaremos bases de datos extraídas de los libros de texto:
+
+Wooldridge, Jeffrey M. Introducción a la Econometría.
+
+Hill, Carter; Griffiths, William; Lim, Guay. Introduction to Econometrics.
+
+Cada ejercicio corresponde a un tipo distinto de modelo.
+
+## Ejercicio 1: Modelo de Respuesta Binaria (Probit o Logit)
+
+```{r, echo=FALSE}
+# Paquetes y cargar datos
+library(AER)
+library(margins)
+library(dplyr)
+library(stargazer)
+library(censReg)
+library(knitr)
+library(sampleSelection)
+library(nnet)
+library(MASS)
+library(haven)
+library(wooldridge)
+```
+
+Base de datos: attend.csv (Wooldridge)
+
+-   Variable dependiente: `attend = 1` si asistió a la universidad, 0 si no. Variables
+
+-   explicativas sugeridas: `faminc`, `parcoll`, `urban`, `income`.
+
+Tareas:
+
+### 1. Estimar un modelo Probit para `attend`.
+
+```{r}
+attend <- read.csv("attend.csv")
+mod_probit <- glm(attend ~ faminc + parcoll + urban + income, 
+                  data = attend, family = binomial(link = "probit"))
+summary(mod_probit)$coefficients |> 
+  kable(digits = 3, 
+               col.names = c("Coeficiente", "Error Estándar", "Valor t", "Valor p"),
+               caption = "Coeficientes del modelo Probit para attend")
+```
+
+### 2. Interpretar los coeficientes.
+
+*Los coeficientes del modelo Probit indican cómo cada variable explicativa afecta la probabilidad de asistir a la universidad (`attend = 1`).*
+
+*`faminc`: Por cada unidad de aumento en el ingreso familiar (`faminc`), la probabilidad de asistir a la universidad aumenta en aproximadamente 0.015, manteniendo las demás variables constantes.*
+
+*`parcoll`: Si al menos uno de los padres asistió a la universidad (`parcoll = 1`), la probabilidad de que el individuo asista a la universidad aumenta en aproximadamente 0.800, en comparación con aquellos cuyos padres no asistieron.*
+
+*`urban`: Vivir en un área urbana (`urban = 1`) aumenta la probabilidad de asistir a la universidad en aproximadamente 0.674, en comparación con aquellos que viven en áreas rurales.*
+
+*`income`: Por cada unidad de aumento en el ingreso personal (`income`), la probabilidad de asistir a la universidad aumenta en aproximadamente 0.006, manteniendo las demás variables constantes.*
+
+### 3. Calcular los efectos marginales de faminc y parcoll.
+
+```{r}
+margins_probit <- margins(mod_probit, variables = c("faminc", "parcoll"))
+summary(margins_probit) |> 
+  kable(digits = 3, caption = "Efectos marginales")
+```
+
+*Ingreso familiar (`faminc`): un incremento de una unidad en el ingreso familiar aumenta la probabilidad del evento en 0.5 puntos porcentuales (`p = 0.006`), efecto pequeño pero estadísticamente significativo al 1 %.*
+
+*Padres con estudios universitarios (`parcoll`): tener padres con educación universitaria incrementa la probabilidad del evento en 26.9 puntos porcentuales (`p < 0.001`), efecto grande y altamente significativo, lo que sugiere un impacto sustancial de la educación parental sobre la probabilidad analizada.*
+
+## Ejercicio 2: Modelo Logit Multinomial
+
+**Base de datos**: travelmode (Hill et al.)
+
+**Variable dependiente**: mode (auto, bus, tren, avion)
+
+**Variables explicativas sugeridas**: income, time, cost
+
+Tareas:
+
+### 1. Estimar un modelo logit multinomial, con automóvil como base.
+
+```{r, echo = FALSE}
+data("TravelMode")
+travelmode <- TravelMode
+```
+
+```{r}
+# Convertir variable dependiente a factor
+travelmode <- travelmode |> 
+  mutate(mode = factor(mode))
+
+# modelo multinomial
+modelo_multinomial <- multinom(
+  mode ~ income + wait + gcost, data = travelmode, trace = FALSE)
+
+summary(modelo_multinomial)$coefficients |>
+  kable(digits = 3,
+               col.names = c("Coeficiente", "Error Estándar", "Valor z", "Valor p"),
+               caption = "Coeficientes del modelo Logit Multinomial")
+```
+
+### 2. Interpretar los coeficientes.
+
+*En el modelo logit multinomial, tomando al automóvil como la categoría base, los resultados muestran que un mayor nivel de ingreso aumenta de manera significativa la probabilidad relativa de elegir tanto el tren como el bus frente al automóvil, mientras que en el caso del avión, aunque el coeficiente estimado es negativo, no resulta estadísticamente significativo. En síntesis, el ingreso se relaciona positivamente con la elección de transporte alternativo al automóvil, excepto en el caso del avión, donde no se observa evidencia clara de efecto.*
+
+### 3. Calcular probabilidades predichas para un individuo con ingreso medio.
+
+```{r}
+# Calcular probabilidades predichas
+inc_mean <- mean(travelmode$income, na.rm = TRUE)
+newdata  <- travelmode
+newdata$income <- inc_mean
+
+probs_mat <- predict(modelo_multinomial, newdata = newdata, type = "probs")
+
+colMeans(as.matrix(probs_mat)) |> 
+  kable(
+    caption = "Probabilidades predichas \n para un individuo con ingreso medio",
+    digits = 3)
+```
+
+## Ejercicio 3: Modelo Logit Ordenado
+
+Base de datos: jobsat.dta (`Wooldridge`)
+
+Variable dependiente: satisfact = 1 (`baja`), 2 (`media`), 3 (`alta satisfacción`)
+
+Variables explicativas sugeridas: age, educ, tenure, union Tareas:
+
+```{r}
+
+jobsat <- read.csv("jobsat.csv") |> # 2.  Convertir satisfact en factor ordenado
+  mutate(
+    satisfact = factor(satisfact, levels = c(1, 2, 3), 
+                       ordered = TRUE, labels = c("Baja", "Media", "Alta")))
+```
+
+### 1. Estimar un modelo logit ordenado.
+
+```{r}
+mod_logit_ordenado <- polr(satisfact ~ age + educ + tenure + union,
+                   data = jobsat, 
+                   method = "logistic", 
+                   Hess = TRUE)
+
+summary(mod_logit_ordenado)$coefficients |> 
+  kable(digits = 3, 
+               col.names = c("Coeficiente", "Error Estándar", "Valor z", "Valor p"),
+               caption = "Coeficientes del modelo Logit Ordenado")
+
+```
+
+### 2. Interpretar el efecto de union.
+
+*El coeficiente estimado para la variable union es 0.884 (p \< 0.01), lo que indica que pertenecer a un sindicato incrementa significativamente la probabilidad de ubicarse en una categoría más alta de satisfacción laboral. En modelos logit ordenados, los coeficientes se interpretan como un cambio en la utilidad latente: un valor positivo implica que la pertenencia sindical desplaza la distribución hacia niveles más altos de satisfacción laboral.*
+
+### 3. Calcular probabilidades predichas por nivel de educación.
+
+```{r}
+# Calcular probabilidades predichas
+newdata <- data.frame(
+  age = mean(jobsat$age, na.rm = TRUE),
+  educ = c(8, 12, 16),  # Ejemplo: baja, media y alta educación
+  tenure = mean(jobsat$tenure, na.rm = TRUE),
+  union = 0
+)
+
+predict(mod_logit_ordenado, newdata, type = "probs") |> 
+  kable(digits = 3, 
+               col.names = c("Baja", "Media", "Alta"),
+               caption = "Probabilidades predichas por nivel de educación")
+  
+```
+
+*Los resultados de las probabilidades predichas muestran que, a medida que aumenta el nivel educativo, la probabilidad de ubicarse en la categoría de baja satisfacción laboral disminuye considerablemente, mientras que crecen las probabilidades de estar en niveles medios y, especialmente, altos de satisfacción. En particular, con educación alta la mayor probabilidad corresponde a la categoría de alta satisfacción, lo que confirma el efecto positivo de la educación sobre la satisfacción laboral.*
+
+## Ejercicio 4: Modelo Tobit (Censura)
+
+Base de datos: healthexp.dta (Hill et al.)
+
+Variable dependiente: exph (gasto en salud, puede ser cero)
+
+Variables explicativas sugeridas: age, income, insured, chronic
+
+\newpage
+
+Tareas:
+
+### 1. Estimar un modelo Tobit.
+
+```{r}
+healthexp <- read.csv("healthexp.csv")
+mod_tobit <- tobit(exph ~ age + income + insured + chronic,
+                   left = 0, data = healthexp)
+
+stargazer(mod_tobit, type = "text", digits = 3,
+          title = "Modelo Tobit para gasto en salud (exph)")
+```
+
+\newpage
+
+### 2. Comparar resultados con OLS.
+
+```{r}
+mod_ols_tobit<- lm(exph ~ age + income + insured + chronic,
+              data = healthexp)
+stargazer(mod_tobit, mod_ols_tobit, type = "text", digits = 3,
+          title = "Comparación entre Modelo Tobit y OLS")
+```
+
+*En el modelo Tobit con censura en cero, los resultados muestran que únicamente la variable* \texttt{insured} *presenta un efecto estadísticamente significativo sobre el gasto en salud, con un coeficiente estimado cercano a 1,044 (*$p < 0.05$*). Esto sugiere que contar con seguro incrementa de manera sustancial el gasto esperado en salud, incluso considerando la presencia de observaciones con gasto nulo. En contraste, las variables* \texttt{age}*,* \texttt{income} *y* \texttt{chronic} *no exhiben efectos significativos en este modelo. Además, la prueba de Wald (*$\chi^2 = 9.73;\; p < 0.05$*) confirma una significancia conjunta moderada de los regresores.*
+
+*Por su parte, la estimación mediante Mínimos Cuadrados Ordinarios (OLS) también reporta un efecto positivo de* \texttt{insured}*, aunque de menor magnitud (aproximadamente 591), y mantiene la no significancia del resto de las variables. Esta comparación evidencia que, al omitir la naturaleza censurada de los datos, el modelo OLS tiende a subestimar el verdadero efecto de estar asegurado sobre el gasto en salud, reforzando la pertinencia del uso del modelo Tobit en este contexto.*
+
+### 3. Calcular efecto marginal esperado del ingreso.
+
+```{r}
+# --- AME de income en Tobit (censura a la izquierda en 0) ---
+# Extraer beta y sigma
+beta <- coef(mod_tobit)
+beta_inc <- beta["income"]
+
+# Escala (sigma) del modelo tobit
+sigma <- if (!is.null(mod_tobit$scale)) mod_tobit$scale else summary(mod_tobit)$scale
+
+# x por observación
+X  <- model.matrix(mod_tobit)          # incluye el intercepto
+xb <- as.numeric(X %*% beta)
+
+# z y Phi(z)
+z   <- xb / sigma
+Phi <- pnorm(z)
+
+# Efecto marginal individual y promedio (AME)
+me_income_i <- Phi * beta_inc
+AME_income  <- mean(me_income_i, na.rm = TRUE)
+
+AME_income
+```
+
+*El efecto marginal promedio estimado para la variable income en el modelo Tobit resulta ser de aproximadamente –0.006. Esto implica que, en promedio, un aumento de una unidad en el ingreso se asocia con una reducción de 0.006 unidades monetarias en el gasto esperado en salud, considerando tanto a los individuos con gasto positivo como a aquellos con gasto censurado en cero. Dado que el valor es muy pequeño y cercano a cero, la evidencia empírica sugiere que el ingreso no ejerce un efecto económicamente relevante sobre el gasto en salud en esta muestra.*
+
+## Ejercicio 5: Modelo de Selección Muestral (Heckman)
+
+Base de datos: mroz.dta (Wooldridge)
+
+Variable dependiente: `lwage` (log salario horario), sólo si `inlf = 1`
+
+Variables explicativas (participación): `age`, `kidslt6`, `kidsge6`, `educ`, `nwifeinc`
+
+Variables explicativas (salario): `educ`, `exper`, `expersq`, `city`
+
+Tareas:
+
+\newpage
+
+### 1. Estimar el modelo de Heckman de dos etapas.
+
+```{r}
+data("mroz")
+
+mod_heckman <- heckit(
+  selection = inlf ~ age + kidslt6 + kidsge6 + educ + nwifeinc,
+  outcome   = lwage ~ educ + exper + I(exper^2) + city,
+  data = mroz,
+  method = "2step"
+)
+
+summary(mod_heckman)
+```
+
+\newpage
+
+### 2. Comparar con estimación `OLS` directa.
+
+```{r}
+mod_ols <- lm(lwage ~ educ + exper + I(exper^2) + city,
+              data = subset(mroz, inlf == 1))
+
+stargazer(mod_heckman, mod_ols, type = "text", digits = 3,
+          title = "Comparación entre Heckman y OLS",
+          dep.var.labels = c("Heckman: Log Salario", "OLS: Log Salario"))
+```
+
+### 3. Discutir la existencia de sesgo de selección.
+
+*La comparación entre la estimación mediante el modelo de Heckman y la estimación por OLS directo muestra que los coeficientes de las variables explicativas principales (*\texttt{educ}*,* \texttt{exper} *e* $\texttt{exper}^2$*) son consistentes en signo, magnitud y significancia estadística. En ambos modelos, la educación mantiene un efecto positivo y significativo sobre el logaritmo del salario ( 0.11), al igual que la experiencia, mientras que la variable cuadrática de experiencia refleja rendimientos decrecientes.*
+
+*La diferencia fundamental radica en el término de selección, conocido como el Inverse Mills Ratio (*$\lambda$*), incluido en la corrección de Heckman. En este caso, el coeficiente estimado para* $\lambda$ *no resulta estadísticamente significativo (*$\rho \approx 0.085,\; p > 0.1$*), lo cual sugiere que no existe evidencia sólida de sesgo de selección en la muestra analizada.*
+
+*En consecuencia, los resultados indican que, aunque el modelo de Heckman es más general y permite corregir potenciales problemas de autoselección en la participación laboral, en este caso específico las estimaciones obtenidas mediante OLS no presentan un sesgo sistemático relevante.*
+
+\newpage
+
+## Ejercicio 6: Modelo de Conteo (Poisson / Binomial Negativa)
+
+Base de datos: `health.csv` (Wooldridge)
+
+Variable dependiente: `numvisit` (número de visitas al médico)
+
+Variables explicativas sugeridas: `age`, `income`, `educ`, `insured`, `health`
+
+Tareas:
+
+### 1. Estimar un modelo Poisson
+
+```{r}
+health <- read.csv("health.csv")
+
+# 3. Modelo Poisson
+mod_pois <- glm(numvisit ~ age + income + educ + insured + health,
+                family = poisson(link = "log"),
+                data = health)
+
+stargazer(mod_pois, type = "text", 
+          title = "Modelo Poisson - Visitas al médico")
+
+```
+
+### 2. Interpretar el efecto de insured y calcular el efecto marginal. 3
+
+```{r}
+marg_insured <- margins(mod_pois, variables = "insured")
+summary(marg_insured) |> 
+  kable()
+```
+
+### Interpretación del efecto de `insured`
+
+*En el modelo de conteo Poisson estimado, el coeficiente de la variable* \texttt{insured} *es* $-0.419$ *y resulta altamente significativo (*$p < 0.01$*). Dado que los coeficientes en el modelo Poisson se interpretan en términos log-lineales, este valor indica que, manteniendo las demás variables constantes, estar asegurado se asocia con una reducción en el número esperado de visitas médicas. En términos relativos, el efecto puede expresarse como*:
+
+$$
+\% \Delta E[\text{numvisit}] \approx \left(e^{-0.419} - 1\right)\times 100 \approx -34.2\%
+$$
+
+*Es decir, las personas aseguradas presentan, en promedio, un 34% menos visitas al médico respecto a aquellas no aseguradas.*
+
+### Efecto marginal esperado
+
+*El cálculo del efecto marginal arroja un valor de **AME = –0.323** (*$p < 0.001$*). Esto significa que, en promedio, estar asegurado reduce en aproximadamente 0.32 el número esperado de visitas médicas por individuo, manteniendo constantes las demás variables.*
